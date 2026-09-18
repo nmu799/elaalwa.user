@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>elaalwa — أرسل إعلانك</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--black:#111;--orange:#f97316;--bg:#fafafa;--white:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;--red:#dc2626;--green:#16a34a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+header{background:#fff;border-bottom:1px solid var(--border);padding:20px 16px;text-align:center;position:sticky;top:0;z-index:10}
+.logo{font-size:30px;font-weight:900}
+.logo .ela{color:#111}
+.logo .alwa{color:#f97316}
+.container{max-width:640px;margin:auto;padding:16px}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:16px}
+.counter{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:7px}
+.bar{height:8px;background:#f3f4f6;border-radius:99px;overflow:hidden;margin-bottom:18px}
+.bar div{height:100%;width:0%;background:#f97316;transition:.3s}
+h1{font-size:21px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.field{margin-bottom:16px}
+label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.req{color:var(--red)}
+input,textarea,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:#111;font-size:15px;font-family:inherit}
+textarea{min-height:110px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,.15)}
+.hint{color:var(--muted);font-size:12px;margin-top:5px}
+.tip{margin-top:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13px;border-radius:10px;padding:10px 12px;line-height:1.7}
+.location-note{margin-top:8px;font-size:13px;font-weight:700;color:#f97316;min-height:18px}
+.img-picker{border:2px dashed #d1d5db;border-radius:12px;padding:25px 15px;text-align:center;cursor:pointer;background:#fcfcfc}
+.img-picker:hover{border-color:#f97316;background:#fff7ed}
+.img-picker .icon{font-size:35px;margin-bottom:8px}
+.img-picker .title{font-weight:700}
+.img-picker .small{color:var(--muted);font-size:12px;margin-top:3px}
+.preview{display:none;position:relative;margin-top:10px}
+.preview img{display:block;width:100%;max-height:400px;object-fit:contain;border:1px solid var(--border);border-radius:12px}
+.remove{position:absolute;top:8px;left:8px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;font-size:20px;cursor:pointer}
+.primary{width:100%;border:0;border-radius:12px;padding:14px;background:#f97316;color:#fff;font-size:16px;font-weight:800;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:not-allowed}
+.alert{display:none;padding:12px 14px;border-radius:10px;margin-bottom:15px;font-size:14px;white-space:pre-line}
+.alert.show{display:block}
+.alert.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.alert.success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+.alert.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.footer-note{max-width:640px;margin:0 auto 14px;color:#374151;font-size:13px;line-height:1.8;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span class="ela">ela</span><span class="alwa">alwa</span></div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="counter">
+      <span>إعلانات اليوم</span>
+      <span id="counterText">— / 1251</span>
+    </div>
+    <div class="bar"><div id="counterBar"></div></div>
+  </div>
+
+  <div class="card">
+    <h1>أرسل إعلانك</h1>
+    <p class="sub">املأ البيانات التالية وسيتم مراجعة إعلانك قبل النشر.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="adForm" novalidate>
+
+      <!-- الصورة -->
+      <div class="field">
+        <label>صورة الإعلان <span class="req">*</span></label>
+        <div class="img-picker" id="imgPicker">
+          <div class="icon">🖼️</div>
+          <div class="title">اضغط لاختيار صورة</div>
+          <div class="small">JPG / PNG / WebP — حتى 5 ميجابايت</div>
+        </div>
+        <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp" hidden>
+        <div class="preview" id="preview">
+          <img id="previewImg" alt="معاينة">
+          <button type="button" class="remove" id="removeImg" aria-label="حذف الصورة">×</button>
+        </div>
+        <div class="hint" id="imgInfo"></div>
+      </div>
+
+      <!-- الوصف -->
+      <div class="field">
+        <label for="description">وصف الإعلان <span class="req">*</span></label>
+        <textarea id="description" maxlength="2000" placeholder="اكتب وصفًا واضحًا للإعلان..." required></textarea>
+        <div class="hint"><span id="descCount">0</span> / 2000</div>
+        <div class="tip">
+          استخدم تصميمًا واضحًا، وقدّم عروضًا وتخفيضات مميزة تشجع المستخدم على اكتشاف ما تقدمه.
+        </div>
+      </div>
+
+      <!-- الرابط -->
+      <div class="field">
+        <label for="link">الرابط <span class="req">*</span></label>
+        <input type="url" id="link" placeholder="https://example.com" required>
+      </div>
+
+      <!-- البريد -->
+      <div class="field">
+        <label for="email">Gmail للتواصل <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="example@gmail.com" required>
+      </div>
+
+      <!-- المحافظة -->
+      <div class="field">
+        <label for="governorate">المحافظة <span class="req">*</span></label>
+        <select id="governorate" required>
+          <option value="">اختر المحافظة</option>
+        </select>
+      </div>
+
+      <!-- المنطقة -->
+      <div class="field">
+        <label for="area">المنطقة <span class="req">*</span></label>
+        <select id="area" required disabled>
+          <option value="">اختر المحافظة أولًا</option>
+        </select>
+        <div class="location-note" id="locationNote"></div>
+      </div>
+
+      <button type="submit" class="primary" id="submitBtn">إرسال الإعلان</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-note">
+    حدد المحافظة والمنطقة، ليصل الإعلان إلى المستخدمين المتواجدين في نفس النطاق الجغرافي.
+  </p>
+  <div>© elaalwa — جميع الحقوق محفوظة <span id="year"></span></div>
+</footer>
+
+<script>
+/* =====================================================
+   SUPABASE
+===================================================== */
+const SUPABASE_URL = "https://snndcnrtekegddlnvxea.supabase.co";
+const SUPABASE_KEY = "sb_publishable_i-Ti6b19e0wT-KoVW5a7nw_R7jNG0sm";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+const DAILY_LIMIT = 1251;
+const MAX_SIZE = 5 * 1024 * 1024;
+const MAX_DIM = 1600;
+const IMAGE_QUALITY = 0.82;
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+const $ = id => document.getElementById(id);
+$("year").textContent = new Date().getFullYear();
+
+/* =====================================================
+   ALERT
+===================================================== */
+function showAlert(message, type = "error") {
+  const el = $("alert");
+  el.textContent = message;
+  el.className = "alert show " + type;
+}
+function hideAlert() {
+  $("alert").className = "alert";
+}
+
+/* =====================================================
+   LOCATIONS — العراق كامل (19 محافظة)
+===================================================== */
+const IRAQ_LOCATIONS = [
+/* ================= 1. بغداد ================= */
+{id:"gov_01",name:"بغداد",nameEn:"Baghdad",areas:[
+{id:"gov_01_area_001",name:"المنصور",nameEn:"Mansour"},
+{id:"gov_01_area_002",name:"الكرادة",nameEn:"Al-Karrada"},
+{id:"gov_01_area_003",name:"مدينة الصدر",nameEn:"Madinat Al-Sadr"},
+{id:"gov_01_area_004",name:"زيونة",nameEn:"Zayouna"},
+{id:"gov_01_area_005",name:"الكاظمية",nameEn:"Al-Kadhimiya"},
+{id:"gov_01_area_006",name:"الأعظمية",nameEn:"Al-Adhamiya"},
+{id:"gov_01_area_007",name:"بغداد الجديدة",nameEn:"Baghdad Al-Jadida"},
+{id:"gov_01_area_008",name:"اليرموك",nameEn:"Yarmouk"},
+{id:"gov_01_area_009",name:"الشعلة",nameEn:"Al-Shula"},
+{id:"gov_01_area_010",name:"الغزالية",nameEn:"Al-Ghazaliya"},
+{id:"gov_01_area_011",name:"السيدية",nameEn:"Al-Saydiya"},
+{id:"gov_01_area_012",name:"العامرية",nameEn:"Al-Amiriya"},
+{id:"gov_01_area_013",name:"البياع",nameEn:"Al-Bayaa"},
+{id:"gov_01_area_014",name:"الدورة",nameEn:"Al-Doura"},
+{id:"gov_01_area_015",name:"الحرية",nameEn:"Al-Hurriya"},
+{id:"gov_01_area_016",name:"حي الجامعة",nameEn:"Hay Al-Jamiaa"},
+{id:"gov_01_area_017",name:"حي العدل",nameEn:"Hay Al-Adl"},
+{id:"gov_01_area_018",name:"الكرادة داخل",nameEn:"Al-Karrada Dakhil"},
+{id:"gov_01_area_019",name:"الكرادة خارج",nameEn:"Al-Karrada Kharij"},
+{id:"gov_01_area_020",name:"الجادرية",nameEn:"Al-Jadriya"},
+{id:"gov_01_area_021",name:"شارع فلسطين",nameEn:"Sharea Palestine"},
+{id:"gov_01_area_022",name:"شارع النضال",nameEn:"Sharea Al-Nidhal"},
+{id:"gov_01_area_023",name:"الحارثية",nameEn:"Al-Harithiya"},
+{id:"gov_01_area_024",name:"القادسية",nameEn:"Al-Qadisiya"},
+{id:"gov_01_area_025",name:"الغدير",nameEn:"Al-Ghadeer"},
+{id:"gov_01_area_026",name:"البلديات",nameEn:"Al-Baladiyat"},
+{id:"gov_01_area_027",name:"الشعب",nameEn:"Al-Shaab"},
+{id:"gov_01_area_028",name:"الطالبية",nameEn:"Al-Talbiya"},
+{id:"gov_01_area_029",name:"الأمين",nameEn:"Al-Ameen"},
+{id:"gov_01_area_030",name:"المشتل",nameEn:"Al-Mashtal"},
+{id:"gov_01_area_031",name:"العبيدي",nameEn:"Al-Ubaidi"},
+{id:"gov_01_area_032",name:"حي جميلة",nameEn:"Hay Jamila"},
+{id:"gov_01_area_033",name:"حي القاهرة",nameEn:"Hay Al-Qahira"},
+{id:"gov_01_area_034",name:"حي تونس",nameEn:"Hay Tunis"},
+{id:"gov_01_area_035",name:"أور",nameEn:"Ur"},
+{id:"gov_01_area_036",name:"البنوك",nameEn:"Al-Bunook"},
+{id:"gov_01_area_037",name:"الوزيرية",nameEn:"Al-Waziriya"},
+{id:"gov_01_area_038",name:"باب الشرقي",nameEn:"Bab Al-Sharqi"},
+{id:"gov_01_area_039",name:"باب المعظم",nameEn:"Bab Al-Muadham"},
+{id:"gov_01_area_040",name:"السعدون",nameEn:"Al-Saadoun"},
+{id:"gov_01_area_041",name:"النهضة",nameEn:"Al-Nahda"},
+{id:"gov_01_area_042",name:"الكيلاني",nameEn:"Al-Kilani"},
+{id:"gov_01_area_043",name:"الشيخ عمر",nameEn:"Al-Sheikh Omar"},
+{id:"gov_01_area_044",name:"الجهاد",nameEn:"Al-Jihad"},
+{id:"gov_01_area_045",name:"حي العامل",nameEn:"Hay Al-Amil"},
+{id:"gov_01_area_046",name:"الإعلام",nameEn:"Al-Ilam"},
+{id:"gov_01_area_047",name:"الشرطة الرابعة",nameEn:"Al-Shorta Al-Rabia"},
+{id:"gov_01_area_048",name:"الخضراء",nameEn:"Al-Khadraa"},
+{id:"gov_01_area_049",name:"سبع أبكار",nameEn:"Sabaa Abkar"},
+{id:"gov_01_area_050",name:"العطيفية",nameEn:"Al-Atifiya"},
+{id:"gov_01_area_051",name:"الشالجية",nameEn:"Al-Shaljiya"},
+{id:"gov_01_area_052",name:"الرحمانية",nameEn:"Al-Rahmaniya"},
+{id:"gov_01_area_053",name:"العلاوي",nameEn:"Al-Alawi"},
+{id:"gov_01_area_054",name:"الصالحية",nameEn:"Al-Salhiya"},
+{id:"gov_01_area_055",name:"الوشاش",nameEn:"Al-Washash"},
+{id:"gov_01_area_056",name:"الداوودي",nameEn:"Al-Dawoodi"},
+{id:"gov_01_area_057",name:"سبع قصور",nameEn:"Sabaa Qusour"},
+{id:"gov_01_area_058",name:"الحسينية",nameEn:"Al-Husseiniya"},
+{id:"gov_01_area_059",name:"الراشدية",nameEn:"Al-Rashidiya"},
+{id:"gov_01_area_060",name:"حي البساتين",nameEn:"Hay Al-Bastain"},
+{id:"gov_01_area_061",name:"الثعالبة",nameEn:"Al-Thaaliba"},
+{id:"gov_01_area_062",name:"الكمالية",nameEn:"Al-Kamaliya"},
+{id:"gov_01_area_063",name:"الفضيلية",nameEn:"Al-Fadhiliya"},
+{id:"gov_01_area_064",name:"أبو دشير",nameEn:"Abu Dsheer"},
+{id:"gov_01_area_065",name:"الزعفرانية",nameEn:"Al-Zafaraniya"},
+{id:"gov_01_area_066",name:"جسر ديالى",nameEn:"Jisr Diyala"},
+{id:"gov_01_area_067",name:"الوحدة",nameEn:"Al-Wahda"},
+{id:"gov_01_area_068",name:"النهروان",nameEn:"Al-Nahrawan"},
+{id:"gov_01_area_069",name:"المدائن",nameEn:"Al-Madaain"},
+{id:"gov_01_area_070",name:"أبو غريب",nameEn:"Abu Ghraib"},
+{id:"gov_01_area_071",name:"النصر والسلام",nameEn:"Al-Nasr Wal-Salam"},
+{id:"gov_01_area_072",name:"الرضوانية",nameEn:"Al-Radwaniya"},
+{id:"gov_01_area_073",name:"الزيدان",nameEn:"Al-Zaidan"},
+{id:"gov_01_area_074",name:"سبع البور",nameEn:"Sabaa Al-Bour"},
+{id:"gov_01_area_075",name:"التاجي",nameEn:"Al-Taji"},
+{id:"gov_01_area_076",name:"اللطيفية",nameEn:"Al-Latifiyah"},
+{id:"gov_01_area_077",name:"اليوسفية",nameEn:"Al-Yusufiya"},
+{id:"gov_01_area_078",name:"المحمودية",nameEn:"Al-Mahmudiya"},
+{id:"gov_01_area_079",name:"الطارمية",nameEn:"Al-Tarmiya"}
+]},
+/* ================= 2. البصرة ================= */
+{id:"gov_02",name:"البصرة",nameEn:"Basra",areas:[
+{id:"gov_02_area_001",name:"العشار",nameEn:"Al-Ashar"},
+{id:"gov_02_area_002",name:"المعقل",nameEn:"Al-Ma'qil"},
+{id:"gov_02_area_003",name:"الجزائر",nameEn:"Al-Jazair"},
+{id:"gov_02_area_004",name:"البصرة القديمة",nameEn:"Al-Basra Al-Qadima"},
+{id:"gov_02_area_005",name:"البراضعية",nameEn:"Al-Baradhiya"},
+{id:"gov_02_area_006",name:"الطويسة",nameEn:"Al-Tuwaisa"},
+{id:"gov_02_area_007",name:"الجمهورية",nameEn:"Al-Jumhuriya"},
+{id:"gov_02_area_008",name:"الحسين",nameEn:"Al-Hussein"},
+{id:"gov_02_area_009",name:"القبلة",nameEn:"Al-Qibla"},
+{id:"gov_02_area_010",name:"خمسة ميل",nameEn:"Khamsa Mil"},
+{id:"gov_02_area_011",name:"الزبير",nameEn:"Al-Zubair"},
+{id:"gov_02_area_012",name:"أبو الخصيب",nameEn:"Abu Al-Khasib"},
+{id:"gov_02_area_013",name:"سفوان",nameEn:"Safwan"},
+{id:"gov_02_area_014",name:"شط العرب",nameEn:"Shatt Al-Arab"},
+{id:"gov_02_area_015",name:"التنومة",nameEn:"Al-Tanuma"},
+{id:"gov_02_area_016",name:"السيبة",nameEn:"Al-Siba"},
+{id:"gov_02_area_017",name:"الفاو",nameEn:"Al-Faw"},
+{id:"gov_02_area_018",name:"الهارثة",nameEn:"Al-Hartha"},
+{id:"gov_02_area_019",name:"الدير",nameEn:"Al-Dair"},
+{id:"gov_02_area_020",name:"القرنة",nameEn:"Al-Qurna"},
+{id:"gov_02_area_021",name:"المدينة",nameEn:"Al-Madina"},
+{id:"gov_02_area_022",name:"الهويشلة",nameEn:"Al-Huwaishila"},
+{id:"gov_02_area_023",name:"النشوة",nameEn:"Al-Nashwa"},
+{id:"gov_02_area_024",name:"الزبير الجديدة",nameEn:"Al-Zubair Al-Jadida"},
+{id:"gov_02_area_025",name:"خور الزبير",nameEn:"Khor Al-Zubair"},
+{id:"gov_02_area_026",name:"أم قصر",nameEn:"Umm Qasr"},
+{id:"gov_02_area_027",name:"الرميلة",nameEn:"Al-Rumaila"},
+{id:"gov_02_area_028",name:"البرجسية",nameEn:"Al-Burjesiya"},
+{id:"gov_02_area_029",name:"سفوان الجديدة",nameEn:"Safwan Al-Jadida"},
+{id:"gov_02_area_030",name:"حي الأندلس",nameEn:"Hay Al-Andalus"},
+{id:"gov_02_area_031",name:"حي الخليج العربي",nameEn:"Hay Al-Khaleej Al-Arabi"},
+{id:"gov_02_area_032",name:"حي الأطباء",nameEn:"Hay Al-Atibaa"},
+{id:"gov_02_area_033",name:"حي الأحرار",nameEn:"Hay Al-Ahrar"},
+{id:"gov_02_area_034",name:"حي الرسالة",nameEn:"Hay Al-Risala"},
+{id:"gov_02_area_035",name:"حي المهندسين",nameEn:"Hay Al-Muhandisin"},
+{id:"gov_02_area_036",name:"حي العامل",nameEn:"Hay Al-Amil"},
+{id:"gov_02_area_037",name:"حي الخليج",nameEn:"Hay Al-Khaleej"},
+{id:"gov_02_area_038",name:"حي الحسين",nameEn:"Hay Al-Hussein"},
+{id:"gov_02_area_039",name:"حي القادسية",nameEn:"Hay Al-Qadisiya"},
+{id:"gov_02_area_040",name:"حي النصر",nameEn:"Hay Al-Nasr"},
+{id:"gov_02_area_041",name:"حي السلام",nameEn:"Hay Al-Salam"},
+{id:"gov_02_area_042",name:"حي الزهراء",nameEn:"Hay Al-Zahraa"},
+{id:"gov_02_area_043",name:"حي الحسين العسكري",nameEn:"Hay Al-Hussein Al-Askari"},
+{id:"gov_02_area_044",name:"حي الأصمعي",nameEn:"Hay Al-Asmaei"},
+{id:"gov_02_area_045",name:"الأصمعي الجديد",nameEn:"Al-Asmaei Al-Jadid"},
+{id:"gov_02_area_046",name:"حي الحكيم",nameEn:"Hay Al-Hakim"},
+{id:"gov_02_area_047",name:"حي الجهاد",nameEn:"Hay Al-Jihad"},
+{id:"gov_02_area_048",name:"حي المعلمين",nameEn:"Hay Al-Mualimeen"},
+{id:"gov_02_area_049",name:"حي الشرطة",nameEn:"Hay Al-Shorta"},
+{id:"gov_02_area_050",name:"حي الطويسة",nameEn:"Hay Al-Tuwaisa"},
+{id:"gov_02_area_051",name:"حي الرافدين",nameEn:"Hay Al-Rafidain"},
+{id:"gov_02_area_052",name:"حي النخيل",nameEn:"Hay Al-Nakheel"},
+{id:"gov_02_area_053",name:"حي القائم",nameEn:"Hay Al-Qaim"},
+{id:"gov_02_area_054",name:"حي الحسين الجديد",nameEn:"Hay Al-Hussein Al-Jadid"},
+{id:"gov_02_area_055",name:"حي الموفقية",nameEn:"Hay Al-Muwafaqiya"},
+{id:"gov_02_area_056",name:"حي خمسة ميل",nameEn:"Hay Khamsa Mil"},
+{id:"gov_02_area_057",name:"حي البكر",nameEn:"Hay Al-Bakr"},
+{id:"gov_02_area_058",name:"حي الجمهورية",nameEn:"Hay Al-Jumhuriya"}
+]},
+/* ================= 3. نينوى ================= */
+{id:"gov_03",name:"نينوى",nameEn:"Nineveh",areas:[
+{id:"gov_03_area_001",name:"الموصل",nameEn:"Mosul"},
+{id:"gov_03_area_002",name:"تلعفر",nameEn:"Tal Afar"},
+{id:"gov_03_area_003",name:"الحمدانية",nameEn:"Al-Hamdaniya"},
+{id:"gov_03_area_004",name:"سنجار",nameEn:"Sinjar"},
+{id:"gov_03_area_005",name:"بعشيقة",nameEn:"Bashiqa"},
+{id:"gov_03_area_006",name:"تلكيف",nameEn:"Tel Keppe"},
+{id:"gov_03_area_007",name:"برطلة",nameEn:"Bartella"},
+{id:"gov_03_area_008",name:"القيارة",nameEn:"Al-Qayyarah"},
+{id:"gov_03_area_009",name:"حمام العليل",nameEn:"Hammam Al-Alil"},
+{id:"gov_03_area_010",name:"الشورة",nameEn:"Al-Shura"},
+{id:"gov_03_area_011",name:"بادوش",nameEn:"Badush"},
+{id:"gov_03_area_012",name:"ربيعة",nameEn:"Rabia"},
+{id:"gov_03_area_013",name:"زمار",nameEn:"Zummar"},
+{id:"gov_03_area_014",name:"النمرود",nameEn:"Nimrud"},
+{id:"gov_03_area_015",name:"مخمور",nameEn:"Makhmur"},
+{id:"gov_03_area_016",name:"الحضر",nameEn:"Al-Hatra"},
+{id:"gov_03_area_017",name:"العياضية",nameEn:"Al-Ayadiya"},
+{id:"gov_03_area_018",name:"القحطانية",nameEn:"Al-Qahtaniya"},
+{id:"gov_03_area_019",name:"العدنانية",nameEn:"Al-Adnaniya"},
+{id:"gov_03_area_020",name:"القيروان",nameEn:"Al-Qayrawan"},
+{id:"gov_03_area_021",name:"المحلبية",nameEn:"Al-Mahlabiya"},
+{id:"gov_03_area_022",name:"الكوير",nameEn:"Al-Kuwayr"},
+{id:"gov_03_area_023",name:"وانة",nameEn:"Wana"},
+{id:"gov_03_area_024",name:"فايدة",nameEn:"Faida"},
+{id:"gov_03_area_025",name:"النواحي",nameEn:"Al-Nawahi"},
+{id:"gov_03_area_026",name:"الكسك",nameEn:"Al-Kisk"},
+{id:"gov_03_area_027",name:"المحمودية",nameEn:"Al-Mahmoudiya"},
+{id:"gov_03_area_028",name:"الشلالات",nameEn:"Al-Shalalat"},
+{id:"gov_03_area_029",name:"الكرامة",nameEn:"Al-Karama"},
+{id:"gov_03_area_030",name:"اليرموك",nameEn:"Al-Yarmouk"},
+{id:"gov_03_area_031",name:"الزهور",nameEn:"Al-Zuhur"},
+{id:"gov_03_area_032",name:"العربي",nameEn:"Al-Arabi"},
+{id:"gov_03_area_033",name:"الوحدة",nameEn:"Al-Wahda"},
+{id:"gov_03_area_034",name:"الدواسة",nameEn:"Al-Dawasa"},
+{id:"gov_03_area_035",name:"باب الجديد",nameEn:"Bab Al-Jadid"},
+{id:"gov_03_area_036",name:"باب الطوب",nameEn:"Bab Al-Toub"},
+{id:"gov_03_area_037",name:"الميدان",nameEn:"Al-Midan"},
+{id:"gov_03_area_038",name:"النبي يونس",nameEn:"Nabi Yunus"},
+{id:"gov_03_area_039",name:"الغابات",nameEn:"Al-Ghabat"},
+{id:"gov_03_area_040",name:"الموصل الجديدة",nameEn:"Mosul Al-Jadida"}
+]},
+/* ================= 4. أربيل ================= */
+{id:"gov_04",name:"أربيل",nameEn:"Erbil",areas:[
+{id:"gov_04_area_001",name:"هەولێر",nameEn:"Hawler"},
+{id:"gov_04_area_002",name:"عەنکاوا",nameEn:"Ankawa"},
+{id:"gov_04_area_003",name:"کەسنەزان",nameEn:"Kasnazan"},
+{id:"gov_04_area_004",name:"شۆڕش",nameEn:"Shorish"},
+{id:"gov_04_area_005",name:"ئیسکان",nameEn:"Iskan"},
+{id:"gov_04_area_006",name:"ڕاپەڕین",nameEn:"Raperin"},
+{id:"gov_04_area_007",name:"زانکۆ",nameEn:"Zanko"},
+{id:"gov_04_area_008",name:"دارەشت",nameEn:"Darasht"},
+{id:"gov_04_area_009",name:"باداوە",nameEn:"Badawa"},
+{id:"gov_04_area_010",name:"بنەسڵاوە",nameEn:"Bnaslawa"},
+{id:"gov_04_area_011",name:"شاوێس",nameEn:"Shawis"},
+{id:"gov_04_area_012",name:"تەیراوە",nameEn:"Tayrawa"},
+{id:"gov_04_area_013",name:"ئازادی",nameEn:"Azadi"},
+{id:"gov_04_area_014",name:"دەرتۆ",nameEn:"Darto"},
+{id:"gov_04_area_015",name:"بەحرکە",nameEn:"Bahrka"},
+{id:"gov_04_area_016",name:"بەستۆڕە",nameEn:"Bastora"},
+{id:"gov_04_area_017",name:"٤٠ مەتر",nameEn:"40 Metre"},
+{id:"gov_04_area_018",name:"٦٠ مەتر",nameEn:"60 Metre"},
+{id:"gov_04_area_019",name:"١٠٠ مەتر",nameEn:"100 Metre"},
+{id:"gov_04_area_020",name:"برایەتی",nameEn:"Brayati"},
+{id:"gov_04_area_021",name:"نازناز",nameEn:"Naznaz"},
+{id:"gov_04_area_022",name:"مامۆستایان",nameEn:"Mamostayan"},
+{id:"gov_04_area_023",name:"زێڕین",nameEn:"Zerin"},
+{id:"gov_04_area_024",name:"نەورۆز",nameEn:"Nawroz"},
+{id:"gov_04_area_025",name:"کۆڵان",nameEn:"Kolan"},
+{id:"gov_04_area_026",name:"ڤێنیزیا",nameEn:"Venizia"},
+{id:"gov_04_area_027",name:"فامیلی",nameEn:"Famili"},
+{id:"gov_04_area_028",name:"ئیمپایەر",nameEn:"Impayer"},
+{id:"gov_04_area_029",name:"دڕیم سیتی",nameEn:"Drim Siti"},
+{id:"gov_04_area_030",name:"ڤیلای ئیتاڵی",nameEn:"Vilay Itali"},
+{id:"gov_04_area_031",name:"ڤیلای ئینگلیزی",nameEn:"Vilay Inglizi"},
+{id:"gov_04_area_032",name:"جۆیکڵ",nameEn:"Joykal"},
+{id:"gov_04_area_033",name:"کەسنەزانی نوێ",nameEn:"Kasnazan Nwe"},
+{id:"gov_04_area_034",name:"عەنکاوای نوێ",nameEn:"Ankawa Nwe"},
+{id:"gov_04_area_035",name:"حەیی بەکر",nameEn:"Hayyi Bakir"},
+{id:"gov_04_area_036",name:"حەیی قەڵا",nameEn:"Hayyi Qala"},
+{id:"gov_04_area_037",name:"حەیی پیشەسازی",nameEn:"Hayyi Pishasazi"},
+{id:"gov_04_area_038",name:"حەیی مامۆستایان",nameEn:"Hayyi Mamostayan"},
+{id:"gov_04_area_039",name:"حەیی ئەندازیاران",nameEn:"Hayyi Andazyaran"},
+{id:"gov_04_area_040",name:"حەیی پۆلیس",nameEn:"Hayyi Polis"},
+{id:"gov_04_area_041",name:"حەیی زانکۆ",nameEn:"Hayyi Zanko"},
+{id:"gov_04_area_042",name:"حەیی پزیشکان",nameEn:"Hayyi Pzishkan"},
+{id:"gov_04_area_043",name:"حەیی نەسر",nameEn:"Hayyi Nasr"},
+{id:"gov_04_area_044",name:"حەیی ئاشتی",nameEn:"Hayyi Ashti"},
+{id:"gov_04_area_045",name:"حەیی بەهار",nameEn:"Hayyi Bahar"},
+{id:"gov_04_area_046",name:"حەیی گوڵان",nameEn:"Hayyi Gulan"},
+{id:"gov_04_area_047",name:"حەیی فیرۆزە",nameEn:"Hayyi Firoza"},
+{id:"gov_04_area_048",name:"حەیی بارزانی",nameEn:"Hayyi Barzani"},
+{id:"gov_04_area_049",name:"حەیی شەهید",nameEn:"Hayyi Shahid"}
+]},
+/* ================= 5. السليمانية ================= */
+{id:"gov_05",name:"السليمانية",nameEn:"Sulaymaniyah",areas:[
+{id:"gov_05_area_001",name:"سلێمانی",nameEn:"Slemani"},
+{id:"gov_05_area_002",name:"سەرشەقام",nameEn:"Sarshaqam"},
+{id:"gov_05_area_003",name:"کانی ئاسکان",nameEn:"Kani Askan"},
+{id:"gov_05_area_004",name:"چوارباخ",nameEn:"Chwarbakh"},
+{id:"gov_05_area_005",name:"مەڵکەندی",nameEn:"Malkandi"},
+{id:"gov_05_area_006",name:"جولەکان",nameEn:"Julakan"},
+{id:"gov_05_area_007",name:"شێمحێدین",nameEn:"Shemhedin"},
+{id:"gov_05_area_008",name:"شارەوانی",nameEn:"Sharawani"},
+{id:"gov_05_area_009",name:"عەقاری",nameEn:"Aqari"},
+{id:"gov_05_area_010",name:"سلێمانی نوێ",nameEn:"Slemani Nwe"},
+{id:"gov_05_area_011",name:"قازی محەمەد",nameEn:"Qazi Muhammad"},
+{id:"gov_05_area_012",name:"عەلی ناجی",nameEn:"Ali Naji"},
+{id:"gov_05_area_013",name:"ئاشتی",nameEn:"Ashti"},
+{id:"gov_05_area_014",name:"کانی گۆمە",nameEn:"Kani Goma"},
+{id:"gov_05_area_015",name:"خەلیفاوا",nameEn:"Khalifawa"},
+{id:"gov_05_area_016",name:"چوارچرا",nameEn:"Chwarchra"},
+{id:"gov_05_area_017",name:"وڵووبە",nameEn:"Wlluba"},
+{id:"gov_05_area_018",name:"ئاوبارە",nameEn:"Aubara"},
+{id:"gov_05_area_019",name:"بەکرەجۆ",nameEn:"Bakrajo"},
+{id:"gov_05_area_020",name:"عەواڵ",nameEn:"Awal"},
+{id:"gov_05_area_021",name:"ڕاپەڕین",nameEn:"Raperin"},
+{id:"gov_05_area_022",name:"فەرمانبەران",nameEn:"Farmanbaran"},
+{id:"gov_05_area_023",name:"شەهیدانی سەرچنار",nameEn:"Shahidani Sarchnar"},
+{id:"gov_05_area_024",name:"کانی کوردە",nameEn:"Kani Kurda"},
+{id:"gov_05_area_025",name:"قلیاسان",nameEn:"Qliasan"},
+{id:"gov_05_area_026",name:"بەرانان",nameEn:"Baranan"},
+{id:"gov_05_area_027",name:"بەختیاری",nameEn:"Bakhtiyari"},
+{id:"gov_05_area_028",name:"زەرگەتە",nameEn:"Zargata"},
+{id:"gov_05_area_029",name:"سەرچنار",nameEn:"Sarchnar"},
+{id:"gov_05_area_030",name:"شەکرەکە",nameEn:"Shakraka"},
+{id:"gov_05_area_031",name:"قولەرەیسی سەروو",nameEn:"Qwlaraisi Saru"},
+{id:"gov_05_area_032",name:"تاڤگە",nameEn:"Tavga"},
+{id:"gov_05_area_033",name:"دارۆغا",nameEn:"Darogha"},
+{id:"gov_05_area_034",name:"ئیبراهیم ئەحمەد",nameEn:"Ibrahim Ahmad"},
+{id:"gov_05_area_035",name:"سێتوان",nameEn:"Setwan"},
+{id:"gov_05_area_036",name:"زێڕینۆک",nameEn:"Zerinok"},
+{id:"gov_05_area_037",name:"کازیوە",nameEn:"Kaziwa"},
+{id:"gov_05_area_038",name:"چاوی سلێمانی",nameEn:"Chawi Slemani"},
+{id:"gov_05_area_039",name:"کۆمەڵگەی باران",nameEn:"Komalgai Baran"},
+{id:"gov_05_area_040",name:"شێخان",nameEn:"Shekhan"},
+{id:"gov_05_area_041",name:"توویمەلیک",nameEn:"Tuimelik"},
+{id:"gov_05_area_042",name:"ئازادی",nameEn:"Azadi"},
+{id:"gov_05_area_043",name:"کازیوەی ٢",nameEn:"Kaziwai 2"},
+{id:"gov_05_area_044",name:"قڕگە",nameEn:"Qirga"},
+{id:"gov_05_area_045",name:"قالاوە",nameEn:"Qalawa"},
+{id:"gov_05_area_046",name:"سەربەرزی",nameEn:"Sarbarzi"},
+{id:"gov_05_area_047",name:"ئابڵاخ",nameEn:"Ablakh"},
+{id:"gov_05_area_048",name:"شۆڕشی نوێ",nameEn:"Shorishi Nwe"},
+{id:"gov_05_area_049",name:"دینا سیتی",nameEn:"Dina Siti"},
+{id:"gov_05_area_050",name:"شاری خەونەکان",nameEn:"Shari Khawnakan"},
+{id:"gov_05_area_051",name:"زانکۆ",nameEn:"Zanko"},
+{id:"gov_05_area_052",name:"شێخ عەباس",nameEn:"Shekh Abbas"},
+{id:"gov_05_area_053",name:"کەنە سوورە",nameEn:"Kana Sura"},
+{id:"gov_05_area_054",name:"کۆمپانیای نەوزاد",nameEn:"Kompanyai Nawzad"},
+{id:"gov_05_area_055",name:"گوڵی شار",nameEn:"Guli Shar"},
+{id:"gov_05_area_056",name:"ئەوین سیتی",nameEn:"Awin Siti"},
+{id:"gov_05_area_057",name:"دەروازە سیتی ٢/٣",nameEn:"Darwaza Siti 2/3"},
+{id:"gov_05_area_058",name:"شوقەکانی باڵامبۆ",nameEn:"Shoqakani Balambo"},
+{id:"gov_05_area_059",name:"ناوچە پیشەسازیەکە",nameEn:"Nawcha Pishasaziaka"},
+{id:"gov_05_area_060",name:"صائب سیتی",nameEn:"Saib Siti"},
+{id:"gov_05_area_061",name:"ناوچەی پیشەسازی تانجەڕۆ",nameEn:"Nawchai Pishasazi Tanjaro"},
+{id:"gov_05_area_062",name:"سولی ڤیوو",nameEn:"Suli Viu"},
+{id:"gov_05_area_063",name:"کانی با",nameEn:"Kani Ba"},
+{id:"gov_05_area_064",name:"هەواری زانکۆی مامۆستایان",nameEn:"Hawari Zankoi Mamostayan"},
+{id:"gov_05_area_065",name:"مامۆستایان",nameEn:"Mamostayan"},
+{id:"gov_05_area_066",name:"ئەندازیاران",nameEn:"Andazyaran"},
+{id:"gov_05_area_067",name:"هەڵکەوت",nameEn:"Halkawt"},
+{id:"gov_05_area_068",name:"کوردسات",nameEn:"Kurdsat"},
+{id:"gov_05_area_069",name:"شێروانە",nameEn:"Sherwana"},
+{id:"gov_05_area_070",name:"دباشان",nameEn:"Dbashan"},
+{id:"gov_05_area_071",name:"باخان",nameEn:"Bakhan"},
+{id:"gov_05_area_072",name:"هندڕین",nameEn:"Hindrin"},
+{id:"gov_05_area_073",name:"سۆرین",nameEn:"Sorin"},
+{id:"gov_05_area_074",name:"هەروزی",nameEn:"Harozi"},
+{id:"gov_05_area_075",name:"بادنە",nameEn:"Badina"},
+{id:"gov_05_area_076",name:"زێرین",nameEn:"Zerin"},
+{id:"gov_05_area_077",name:"نێرگز",nameEn:"Nargiz"},
+{id:"gov_05_area_078",name:"کۆیستان",nameEn:"Koistan"},
+{id:"gov_05_area_079",name:"بێرە مەکرۆن",nameEn:"Bira Makron"},
+{id:"gov_05_area_080",name:"دەرگەزین",nameEn:"Dargazin"}
+]},
+/* ================= 6. دهوك ================= */
+{id:"gov_06",name:"دهوك",nameEn:"Duhok",areas:[
+{id:"gov_06_area_001",name:"دهۆک",nameEn:"Duhok"},
+{id:"gov_06_area_002",name:"دیاری",nameEn:"Diyari"},
+{id:"gov_06_area_003",name:"کانی مەهمەدکێ",nameEn:"Kani Mahmadke"},
+{id:"gov_06_area_004",name:"خەبات",nameEn:"Khabat"},
+{id:"gov_06_area_005",name:"مالطا",nameEn:"Malta"},
+{id:"gov_06_area_006",name:"ڕازا",nameEn:"Raza"},
+{id:"gov_06_area_007",name:"شاخکێ",nameEn:"Shakhke"},
+{id:"gov_06_area_008",name:"شیلی",nameEn:"Shili"},
+{id:"gov_06_area_009",name:"شندوخا",nameEn:"Shindokha"},
+{id:"gov_06_area_010",name:"ڕێزکا",nameEn:"Rizka"},
+{id:"gov_06_area_011",name:"بەروشکێ",nameEn:"Baroshke"},
+{id:"gov_06_area_012",name:"مالطای سەروو",nameEn:"Malta Saru"},
+{id:"gov_06_area_013",name:"سەر هەڵدان",nameEn:"Sarheldan"},
+{id:"gov_06_area_014",name:"ئازادی",nameEn:"Azadi"},
+{id:"gov_06_area_015",name:"بەهدینان",nameEn:"Bahdinan"},
+{id:"gov_06_area_016",name:"بەروشکێی خواروو",nameEn:"Baroshkei Khwaru"},
+{id:"gov_06_area_017",name:"بن تەکا",nameEn:"Bin Teka"},
+{id:"gov_06_area_018",name:"بۆتان",nameEn:"Botan"},
+{id:"gov_06_area_019",name:"کەڤەرکێ",nameEn:"Keverke"},
+{id:"gov_06_area_020",name:"مازی",nameEn:"Mazi"},
+{id:"gov_06_area_021",name:"قەسرا",nameEn:"Qasra"},
+{id:"gov_06_area_022",name:"شەهیدان",nameEn:"Shahidan"},
+{id:"gov_06_area_023",name:"ئاشتی",nameEn:"Ashti"},
+{id:"gov_06_area_024",name:"کەلی",nameEn:"Keli"},
+{id:"gov_06_area_025",name:"کەری باسی",nameEn:"Keri Basi"},
+{id:"gov_06_area_026",name:"ئایتیەت",nameEn:"Aytiyet"},
+{id:"gov_06_area_027",name:"ماسیكا",nameEn:"Masika"},
+{id:"gov_06_area_028",name:"ماسیكای ڕۆژئاوا",nameEn:"Masika Rojawa"},
+{id:"gov_06_area_029",name:"میدیا",nameEn:"Media"},
+{id:"gov_06_area_030",name:"مەهاباد",nameEn:"Mahabad"},
+{id:"gov_06_area_031",name:"نزارکێ",nameEn:"Nizarke"},
+{id:"gov_06_area_032",name:"ڕۆناهی",nameEn:"Ronahi"},
+{id:"gov_06_area_033",name:"سێ گیکا",nameEn:"Se Gika"},
+{id:"gov_06_area_034",name:"شۆڕش",nameEn:"Shorish"},
+{id:"gov_06_area_035",name:"نزارکێی نوێ",nameEn:"Nizarke Nwe"},
+{id:"gov_06_area_036",name:"بازار",nameEn:"Bazar"},
+{id:"gov_06_area_037",name:"برایەتی",nameEn:"Brayati"},
+{id:"gov_06_area_038",name:"داسنیا",nameEn:"Dasnia"},
+{id:"gov_06_area_039",name:"کانی خۆشمانا",nameEn:"Kani Khoshmana"},
+{id:"gov_06_area_040",name:"کێڤلا",nameEn:"Kevla"},
+{id:"gov_06_area_041",name:"نەورۆز",nameEn:"Nawroz"},
+{id:"gov_06_area_042",name:"نوهدرا",nameEn:"Nohadra"},
+{id:"gov_06_area_043",name:"پێشانگا",nameEn:"Pishanga"},
+{id:"gov_06_area_044",name:"پیشەسازی",nameEn:"Pishasazi"},
+{id:"gov_06_area_045",name:"سەربەستی",nameEn:"Sarbasti"},
+{id:"gov_06_area_046",name:"زانکۆ",nameEn:"Zanko"},
+{id:"gov_06_area_047",name:"زاوێتە",nameEn:"Zawita"},
+{id:"gov_06_area_048",name:"سیمێل",nameEn:"Simel"},
+{id:"gov_06_area_049",name:"فایدە",nameEn:"Faida"},
+{id:"gov_06_area_050",name:"زاخۆ",nameEn:"Zakho"}
+]},
+/* ================= 7. كركوك ================= */
+{id:"gov_07",name:"كركوك",nameEn:"Kirkuk",areas:[
+{id:"gov_07_area_001",name:"كركوك",nameEn:"Kirkuk"},
+{id:"gov_07_area_002",name:"القلعة",nameEn:"Al-Qalaa"},
+{id:"gov_07_area_003",name:"قورية",nameEn:"Qoriya"},
+{id:"gov_07_area_004",name:"بريادي",nameEn:"Biryadi"},
+{id:"gov_07_area_005",name:"الشورجة",nameEn:"Al-Shorja"},
+{id:"gov_07_area_006",name:"أحمد آغا",nameEn:"Ahmed Agha"},
+{id:"gov_07_area_007",name:"شاطرلو",nameEn:"Shatirlu"},
+{id:"gov_07_area_008",name:"إمام قاسم",nameEn:"Imam Qasim"},
+{id:"gov_07_area_009",name:"تبه",nameEn:"Taba"},
+{id:"gov_07_area_010",name:"الماس",nameEn:"Almas"},
+{id:"gov_07_area_011",name:"المصلى",nameEn:"Al-Musalla"},
+{id:"gov_07_area_012",name:"تسعين",nameEn:"Tiseen"},
+{id:"gov_07_area_013",name:"عرفة",nameEn:"Arafa"},
+{id:"gov_07_area_014",name:"ساحة طيران",nameEn:"Sahat Tayaran"},
+{id:"gov_07_area_015",name:"حمزه لي",nameEn:"Hamza Li"},
+{id:"gov_07_area_016",name:"آزادي",nameEn:"Azadi"},
+{id:"gov_07_area_017",name:"رحيم آوا",nameEn:"Rahimawa"},
+{id:"gov_07_area_018",name:"الحديديين",nameEn:"Al-Hadidiyin"},
+{id:"gov_07_area_019",name:"حي البعث",nameEn:"Hayy Al-Baath"},
+{id:"gov_07_area_020",name:"الواسطي",nameEn:"Al-Wasiti"},
+{id:"gov_07_area_021",name:"غرناطة",nameEn:"Gharnata"},
+{id:"gov_07_area_022",name:"دوميز",nameEn:"Domiz"},
+{id:"gov_07_area_023",name:"واحد آذار",nameEn:"Wahid Adhar"},
+{id:"gov_07_area_024",name:"القادسية",nameEn:"Al-Qadisiya"},
+{id:"gov_07_area_025",name:"پنجه علي",nameEn:"Panja Ali"},
+{id:"gov_07_area_026",name:"الممدودة",nameEn:"Al-Mamduda"},
+{id:"gov_07_area_027",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_07_area_028",name:"العسكري",nameEn:"Al-Askari"},
+{id:"gov_07_area_029",name:"العروبة",nameEn:"Al-Orouba"},
+{id:"gov_07_area_030",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_07_area_031",name:"حي المنتوجات",nameEn:"Hayy Al-Muntajat"},
+{id:"gov_07_area_032",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_07_area_033",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_07_area_034",name:"الأسرى والمفقودين",nameEn:"Al-Asra Wal-Mafqudin"},
+{id:"gov_07_area_035",name:"المعلمين",nameEn:"Al-Mualimin"},
+{id:"gov_07_area_036",name:"الضباط",nameEn:"Al-Dhubbat"},
+{id:"gov_07_area_037",name:"واحد حزيران",nameEn:"Wahid Haziran"},
+{id:"gov_07_area_038",name:"الخضراء",nameEn:"Al-Khadraa"},
+{id:"gov_07_area_039",name:"الهندية",nameEn:"Al-Hindiya"},
+{id:"gov_07_area_040",name:"حي المؤمنين",nameEn:"Hayy Al-Muminin"},
+{id:"gov_07_area_041",name:"العلماء",nameEn:"Al-Ulama"},
+{id:"gov_07_area_042",name:"الإسكان",nameEn:"Al-Iskan"},
+{id:"gov_07_area_043",name:"حي الرسالة",nameEn:"Hayy Al-Risala"},
+{id:"gov_07_area_044",name:"حي التحدي",nameEn:"Hayy Al-Tahaddi"},
+{id:"gov_07_area_045",name:"حي المنصور",nameEn:"Hayy Al-Mansour"},
+{id:"gov_07_area_046",name:"قتيبة",nameEn:"Qutaiba"},
+{id:"gov_07_area_047",name:"دروازة",nameEn:"Darwaza"},
+{id:"gov_07_area_048",name:"الكورنيش",nameEn:"Al-Kornish"},
+{id:"gov_07_area_049",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_07_area_050",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_07_area_051",name:"الزوراء",nameEn:"Al-Zawraa"},
+{id:"gov_07_area_052",name:"عدن",nameEn:"Adan"},
+{id:"gov_07_area_053",name:"الحرية",nameEn:"Al-Hurriya"},
+{id:"gov_07_area_054",name:"الجمهورية",nameEn:"Al-Jumhuriya"},
+{id:"gov_07_area_055",name:"حي المدراء",nameEn:"Hayy Al-Mudaraa"},
+{id:"gov_07_area_056",name:"الرشيد",nameEn:"Al-Rashid"},
+{id:"gov_07_area_057",name:"باشور",nameEn:"Bashur"},
+{id:"gov_07_area_058",name:"القصابين",nameEn:"Al-Qassabin"},
+{id:"gov_07_area_059",name:"حي العباس",nameEn:"Hayy Al-Abbas"},
+{id:"gov_07_area_060",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_07_area_061",name:"شوراو",nameEn:"Shoraw"},
+{id:"gov_07_area_062",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_07_area_063",name:"البناء الجاهز",nameEn:"Al-Binaa Al-Jahiz"},
+{id:"gov_07_area_064",name:"الحجاج",nameEn:"Al-Hajjaj"},
+{id:"gov_07_area_065",name:"بكلر",nameEn:"Baklar"},
+{id:"gov_07_area_066",name:"حي الحر",nameEn:"Hayy Al-Hurr"},
+{id:"gov_07_area_067",name:"الإبراهيمية",nameEn:"Al-Ibrahimiyah"},
+{id:"gov_07_area_068",name:"بارود خانة",nameEn:"Barud Khana"},
+{id:"gov_07_area_069",name:"حسيركي",nameEn:"Hasirki"},
+{id:"gov_07_area_070",name:"بولاق",nameEn:"Bulak"},
+{id:"gov_07_area_071",name:"جقور",nameEn:"Jaqur"},
+{id:"gov_07_area_072",name:"إمام عباس",nameEn:"Imam Abbas"},
+{id:"gov_07_area_073",name:"طريق بغداد",nameEn:"Tareeq Baghdad"},
+{id:"gov_07_area_074",name:"طريق الحويجة",nameEn:"Tareeq Al-Hawija"},
+{id:"gov_07_area_075",name:"داقوق",nameEn:"Daquq"},
+{id:"gov_07_area_076",name:"تازة خورماتو",nameEn:"Taza Khurmatu"},
+{id:"gov_07_area_077",name:"ليلان",nameEn:"Laylan"},
+{id:"gov_07_area_078",name:"قره هنجير",nameEn:"Qara Hanjir"},
+{id:"gov_07_area_079",name:"شوان",nameEn:"Shwan"},
+{id:"gov_07_area_080",name:"التون كوبري",nameEn:"Altun Kupri"},
+{id:"gov_07_area_081",name:"يايجي",nameEn:"Yaychi"},
+{id:"gov_07_area_082",name:"ملا عبد الله",nameEn:"Mulla Abdullah"},
+{id:"gov_07_area_083",name:"الدبس",nameEn:"Al-Dibs"},
+{id:"gov_07_area_084",name:"الزاب",nameEn:"Al-Zab"},
+{id:"gov_07_area_085",name:"سركران",nameEn:"Sargaran"},
+{id:"gov_07_area_086",name:"الحويجة",nameEn:"Al-Hawija"},
+{id:"gov_07_area_087",name:"العباسي",nameEn:"Al-Abbasi"},
+{id:"gov_07_area_088",name:"الرياض",nameEn:"Al-Riyadh"},
+{id:"gov_07_area_089",name:"الرشاد",nameEn:"Al-Rashad"},
+{id:"gov_07_area_090",name:"الملتقى",nameEn:"Al-Multaqa"},
+{id:"gov_07_area_091",name:"بشير",nameEn:"Bashir"},
+{id:"gov_07_area_092",name:"تركلان",nameEn:"Turkalan"},
+{id:"gov_07_area_093",name:"طوز خورماتو",nameEn:"Tuz Khurmatu"},
+{id:"gov_07_area_094",name:"أمرلي",nameEn:"Amerli"}
+]},
+/* ================= 8. الانبار ================= */
+{id:"gov_08",name:"الانبار",nameEn:"Anbar",areas:[
+{id:"gov_08_area_001",name:"الرمادي",nameEn:"Ramadi"},
+{id:"gov_08_area_002",name:"الفلوجة",nameEn:"Fallujah"},
+{id:"gov_08_area_003",name:"الخالدية",nameEn:"Khalidiya"},
+{id:"gov_08_area_004",name:"الحبانية",nameEn:"Habbaniya"},
+{id:"gov_08_area_005",name:"الصقلاوية",nameEn:"Saqlawiya"},
+{id:"gov_08_area_006",name:"الكرمة",nameEn:"Karma"},
+{id:"gov_08_area_007",name:"العامرية",nameEn:"Amiriya"},
+{id:"gov_08_area_008",name:"هيت",nameEn:"Hit"},
+{id:"gov_08_area_009",name:"حديثة",nameEn:"Haditha"},
+{id:"gov_08_area_010",name:"القائم",nameEn:"Al-Qaim"},
+{id:"gov_08_area_011",name:"عانة",nameEn:"Anah"},
+{id:"gov_08_area_012",name:"راوة",nameEn:"Rawa"},
+{id:"gov_08_area_013",name:"الرطبة",nameEn:"Rutba"},
+{id:"gov_08_area_014",name:"البغدادي",nameEn:"Al-Baghdadi"},
+{id:"gov_08_area_015",name:"كبيسة",nameEn:"Kubaisa"},
+{id:"gov_08_area_016",name:"المحمدي",nameEn:"Al-Muhammadi"},
+{id:"gov_08_area_017",name:"الحقلانية",nameEn:"Al-Haqlaniya"},
+{id:"gov_08_area_018",name:"بروانة",nameEn:"Barwana"},
+{id:"gov_08_area_019",name:"العبيدي",nameEn:"Al-Obaidi"},
+{id:"gov_08_area_020",name:"الرمانة",nameEn:"Rumana"},
+{id:"gov_08_area_021",name:"الكرابلة",nameEn:"Al-Karabla"},
+{id:"gov_08_area_022",name:"الريحانة",nameEn:"Al-Rihana"},
+{id:"gov_08_area_023",name:"العباسي",nameEn:"Al-Abbasi"},
+{id:"gov_08_area_024",name:"الرشاد",nameEn:"Al-Rashad"},
+{id:"gov_08_area_025",name:"البوعلوان",nameEn:"Al-Bu Alwan"},
+{id:"gov_08_area_026",name:"الصوفية",nameEn:"Al-Sofiya"},
+{id:"gov_08_area_027",name:"السجارية",nameEn:"Al-Sijariya"},
+{id:"gov_08_area_028",name:"حصيبة الشرقية",nameEn:"Husaiba Al-Sharqiya"},
+{id:"gov_08_area_029",name:"الحميرة",nameEn:"Al-Humaira"},
+{id:"gov_08_area_030",name:"الجزيرة",nameEn:"Al-Jazira"},
+{id:"gov_08_area_031",name:"الطاش",nameEn:"Al-Tash"},
+{id:"gov_08_area_032",name:"العنكور",nameEn:"Al-Ankur"},
+{id:"gov_08_area_033",name:"البوفراج",nameEn:"Al-Bu Faraj"},
+{id:"gov_08_area_034",name:"البوذياب",nameEn:"Al-Bu Dhiab"},
+{id:"gov_08_area_035",name:"البوعيثة",nameEn:"Al-Bu Aitha"},
+{id:"gov_08_area_036",name:"البوعساف",nameEn:"Al-Bu Assaf"},
+{id:"gov_08_area_037",name:"البوريشة",nameEn:"Al-Bu Risha"},
+{id:"gov_08_area_038",name:"زنكورة",nameEn:"Zankura"},
+{id:"gov_08_area_039",name:"الحامضية",nameEn:"Al-Hamidhiya"},
+{id:"gov_08_area_040",name:"البوبالي",nameEn:"Al-Bu Bali"},
+{id:"gov_08_area_041",name:"البوعبيد",nameEn:"Al-Bu Obaid"},
+{id:"gov_08_area_042",name:"الشركة",nameEn:"Al-Sharika"},
+{id:"gov_08_area_043",name:"الورار",nameEn:"Al-Warar"},
+{id:"gov_08_area_044",name:"المهندسين",nameEn:"Al-Muhandisin"},
+{id:"gov_08_area_045",name:"الضباط الأولى",nameEn:"Al-Dhubbat Al-Oula"},
+{id:"gov_08_area_046",name:"الضباط الثانية",nameEn:"Al-Dhubbat Al-Thaniya"},
+{id:"gov_08_area_047",name:"7 نيسان",nameEn:"7 Nisan"},
+{id:"gov_08_area_048",name:"الجمعية",nameEn:"Al-Jamiiya"},
+{id:"gov_08_area_049",name:"الحوز",nameEn:"Al-Hawz"},
+{id:"gov_08_area_050",name:"الثيلة",nameEn:"Al-Thaila"},
+{id:"gov_08_area_051",name:"القدس",nameEn:"Al-Quds"},
+{id:"gov_08_area_052",name:"البوجليب",nameEn:"Al-Bu Jleib"},
+{id:"gov_08_area_053",name:"المخابرات",nameEn:"Al-Mukhabarat"},
+{id:"gov_08_area_054",name:"الملعب",nameEn:"Al-Malaab"},
+{id:"gov_08_area_055",name:"الشرطة",nameEn:"Al-Shorta"},
+{id:"gov_08_area_056",name:"البوجابر",nameEn:"Al-Bu Jaber"},
+{id:"gov_08_area_057",name:"الجمهوري",nameEn:"Al-Jumhuri"},
+{id:"gov_08_area_058",name:"الأندلس",nameEn:"Al-Andalus"},
+{id:"gov_08_area_059",name:"المعلمين",nameEn:"Al-Mualimin"},
+{id:"gov_08_area_060",name:"البكر",nameEn:"Al-Bakr"},
+{id:"gov_08_area_061",name:"العادل",nameEn:"Al-Adil"},
+{id:"gov_08_area_062",name:"الإسكان الأولى",nameEn:"Al-Iskan Al-Oula"},
+{id:"gov_08_area_063",name:"الإسكان الثانية",nameEn:"Al-Iskan Al-Thaniya"},
+{id:"gov_08_area_064",name:"العزيزية",nameEn:"Al-Aziziya"},
+{id:"gov_08_area_065",name:"القطانة",nameEn:"Al-Qatana"},
+{id:"gov_08_area_066",name:"التأميم",nameEn:"Al-Tamim"},
+{id:"gov_08_area_067",name:"8 شباط",nameEn:"8 Shubat"},
+{id:"gov_08_area_068",name:"30 تموز",nameEn:"30 Tamuz"},
+{id:"gov_08_area_069",name:"الدواجن",nameEn:"Al-Dawajin"},
+{id:"gov_08_area_070",name:"القادسية الأولى",nameEn:"Al-Qadisiya Al-Oula"},
+{id:"gov_08_area_071",name:"القادسية الثانية",nameEn:"Al-Qadisiya Al-Thaniya"},
+{id:"gov_08_area_072",name:"حي الأكراد",nameEn:"Hayy Al-Akrad"},
+{id:"gov_08_area_073",name:"حي جامعة الأنبار",nameEn:"Hayy Jamiat Al-Anbar"},
+{id:"gov_08_area_074",name:"دور الضباط",nameEn:"Dor Al-Dhubbat"},
+{id:"gov_08_area_075",name:"دور نواب الضباط",nameEn:"Dor Nuwab Al-Dhubbat"},
+{id:"gov_08_area_076",name:"دور السكك",nameEn:"Dor Al-Sikak"},
+{id:"gov_08_area_077",name:"خمسة كيلو",nameEn:"Khamsa Kilo"},
+{id:"gov_08_area_078",name:"المرور",nameEn:"Al-Murur"},
+{id:"gov_08_area_079",name:"نزال",nameEn:"Nazzal"},
+{id:"gov_08_area_080",name:"الشهداء",nameEn:"Al-Shuhada"},
+{id:"gov_08_area_081",name:"الجولان",nameEn:"Al-Jolan"},
+{id:"gov_08_area_082",name:"العسكري",nameEn:"Al-Askari"},
+{id:"gov_08_area_083",name:"الصناعي",nameEn:"Al-Sinai"},
+{id:"gov_08_area_084",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_08_area_085",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_08_area_086",name:"حي القلقة",nameEn:"Hayy Al-Qalqa"},
+{id:"gov_08_area_087",name:"حي العمال",nameEn:"Hayy Al-Ummal"},
+{id:"gov_08_area_088",name:"حي الخضر",nameEn:"Hayy Al-Khader"},
+{id:"gov_08_area_089",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_08_area_090",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_08_area_091",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_08_area_092",name:"حي البكر",nameEn:"Hayy Al-Bakr"},
+{id:"gov_08_area_093",name:"حي فندي والكبانية",nameEn:"Hayy Fandi Wal-Kabaniya"},
+{id:"gov_08_area_094",name:"حي الجري",nameEn:"Hayy Al-Jari"},
+{id:"gov_08_area_095",name:"خان البغدادي",nameEn:"Khan Al-Baghdadi"},
+{id:"gov_08_area_096",name:"الدولاب",nameEn:"Al-Dolab"},
+{id:"gov_08_area_097",name:"بناشير",nameEn:"Banashir"},
+{id:"gov_08_area_098",name:"الخوضة",nameEn:"Al-Khoda"},
+{id:"gov_08_area_099",name:"أبو طيبان",nameEn:"Abu Taiban"},
+{id:"gov_08_area_100",name:"السدة",nameEn:"Al-Sadda"},
+{id:"gov_08_area_101",name:"الشامية",nameEn:"Al-Shamiya"},
+{id:"gov_08_area_102",name:"البو جاسم",nameEn:"Al-Bu Jasim"},
+{id:"gov_08_area_103",name:"البو فهد",nameEn:"Al-Bu Fahad"},
+{id:"gov_08_area_104",name:"البو محل",nameEn:"Al-Bu Mahal"},
+{id:"gov_08_area_105",name:"البو غانم",nameEn:"Al-Bu Ghanim"},
+{id:"gov_08_area_106",name:"البو شعبان",nameEn:"Al-Bu Shaban"},
+{id:"gov_08_area_107",name:"البو كليب",nameEn:"Al-Bu Kulaib"},
+{id:"gov_08_area_108",name:"البونمر",nameEn:"Al-Bu Nimr"},
+{id:"gov_08_area_109",name:"القادسية",nameEn:"Al-Qadisiya"},
+{id:"gov_08_area_110",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_08_area_111",name:"حي التقدم",nameEn:"Hayy Al-Taqaddum"},
+{id:"gov_08_area_112",name:"حي العال",nameEn:"Hayy Al-Aal"},
+{id:"gov_08_area_113",name:"حي الأمجاد",nameEn:"Hayy Al-Amjad"},
+{id:"gov_08_area_114",name:"حي الخنساء",nameEn:"Hayy Al-Khansa"},
+{id:"gov_08_area_115",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_08_area_116",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_08_area_117",name:"حي التأميم",nameEn:"Hayy Al-Tamim"},
+{id:"gov_08_area_118",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"}
+]},
+/* ================= 9. صلاح الدين ================= */
+{id:"gov_09",name:"صلاح الدين",nameEn:"Salah Al-Din",areas:[
+{id:"gov_09_area_001",name:"تكريت",nameEn:"Tikrit"},
+{id:"gov_09_area_002",name:"سامراء",nameEn:"Samarra"},
+{id:"gov_09_area_003",name:"بيجي",nameEn:"Baiji"},
+{id:"gov_09_area_004",name:"بلد",nameEn:"Balad"},
+{id:"gov_09_area_005",name:"الدور",nameEn:"Al-Dour"},
+{id:"gov_09_area_006",name:"الشرقاط",nameEn:"Al-Shirqat"},
+{id:"gov_09_area_007",name:"طوز خورماتو",nameEn:"Tuz Khurmatu"},
+{id:"gov_09_area_008",name:"الضلوعية",nameEn:"Al-Dhuluiya"},
+{id:"gov_09_area_009",name:"الدجيل",nameEn:"Al-Dujail"},
+{id:"gov_09_area_010",name:"الإسحاقي",nameEn:"Al-Ishaqi"},
+{id:"gov_09_area_011",name:"العلم",nameEn:"Al-Alam"},
+{id:"gov_09_area_012",name:"يثرب",nameEn:"Yathrib"},
+{id:"gov_09_area_013",name:"آمرلي",nameEn:"Amerli"},
+{id:"gov_09_area_014",name:"سليمان بيك",nameEn:"Suleiman Bek"},
+{id:"gov_09_area_015",name:"دجلة",nameEn:"Dijla"},
+{id:"gov_09_area_016",name:"الحجاج",nameEn:"Al-Hajjaj"},
+{id:"gov_09_area_017",name:"الصينية",nameEn:"Al-Siniya"},
+{id:"gov_09_area_018",name:"مكحول",nameEn:"Makhoul"},
+{id:"gov_09_area_019",name:"الزاب",nameEn:"Al-Zab"},
+{id:"gov_09_area_020",name:"الزوية",nameEn:"Al-Zawiya"},
+{id:"gov_09_area_021",name:"القادسية",nameEn:"Al-Qadisiya"},
+{id:"gov_09_area_022",name:"القلعة",nameEn:"Al-Qalaa"},
+{id:"gov_09_area_023",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_09_area_024",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_09_area_025",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_09_area_026",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_09_area_027",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_09_area_028",name:"حي القادسية الثانية",nameEn:"Hayy Al-Qadisiya Al-Thaniya"},
+{id:"gov_09_area_029",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_09_area_030",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_09_area_031",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_09_area_032",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_09_area_033",name:"حي السكك",nameEn:"Hayy Al-Sikak"},
+{id:"gov_09_area_034",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_09_area_035",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_09_area_036",name:"حي التأميم",nameEn:"Hayy Al-Tamim"},
+{id:"gov_09_area_037",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_09_area_038",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_09_area_039",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_09_area_040",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_09_area_041",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_09_area_042",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_09_area_043",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_09_area_044",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_09_area_045",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_09_area_046",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_09_area_047",name:"حي البكر",nameEn:"Hayy Al-Bakr"},
+{id:"gov_09_area_048",name:"حي فلسطين",nameEn:"Hayy Palestine"},
+{id:"gov_09_area_049",name:"حي النور",nameEn:"Hayy Al-Noor"}
+]},
+/* ================= 10. ديالى ================= */
+{id:"gov_10",name:"ديالى",nameEn:"Diyala",areas:[
+{id:"gov_10_area_001",name:"بعقوبة",nameEn:"Baquba"},
+{id:"gov_10_area_002",name:"المقدادية",nameEn:"Al-Muqdadiya"},
+{id:"gov_10_area_003",name:"الخالص",nameEn:"Al-Khalis"},
+{id:"gov_10_area_004",name:"خانقين",nameEn:"Khanaqin"},
+{id:"gov_10_area_005",name:"بلدروز",nameEn:"Baladruz"},
+{id:"gov_10_area_006",name:"مندلي",nameEn:"Mandali"},
+{id:"gov_10_area_007",name:"جلولاء",nameEn:"Jalawla"},
+{id:"gov_10_area_008",name:"السعدية",nameEn:"Al-Saadiya"},
+{id:"gov_10_area_009",name:"بني سعد",nameEn:"Bani Saad"},
+{id:"gov_10_area_010",name:"بهرز",nameEn:"Bahraz"},
+{id:"gov_10_area_011",name:"كنعان",nameEn:"Kanaan"},
+{id:"gov_10_area_012",name:"هبهب",nameEn:"Hibhib"},
+{id:"gov_10_area_013",name:"العبارة",nameEn:"Al-Abbara"},
+{id:"gov_10_area_014",name:"العظيم",nameEn:"Al-Azeem"},
+{id:"gov_10_area_015",name:"المنصورية",nameEn:"Al-Mansuriya"},
+{id:"gov_10_area_016",name:"جديدة الشط",nameEn:"Jadidat Al-Shat"},
+{id:"gov_10_area_017",name:"بني تميم",nameEn:"Bani Tamim"},
+{id:"gov_10_area_018",name:"الوجيهية",nameEn:"Al-Wajihiya"},
+{id:"gov_10_area_019",name:"أبي صيدا",nameEn:"Abi Saida"},
+{id:"gov_10_area_020",name:"قره تبه",nameEn:"Qara Tapa"},
+{id:"gov_10_area_021",name:"قزانية",nameEn:"Qazaniya"},
+{id:"gov_10_area_022",name:"قرة تبة",nameEn:"Qara Tapa"},
+{id:"gov_10_area_023",name:"نفط خانة",nameEn:"Naft Khana"},
+{id:"gov_10_area_024",name:"خان بني سعد",nameEn:"Khan Bani Saad"},
+{id:"gov_10_area_025",name:"هبهب الجديدة",nameEn:"Hibhib Al-Jadida"},
+{id:"gov_10_area_026",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_10_area_027",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_10_area_028",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_10_area_029",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_10_area_030",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_10_area_031",name:"حي فلسطين",nameEn:"Hayy Palestine"},
+{id:"gov_10_area_032",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_10_area_033",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_10_area_034",name:"حي المصطفى",nameEn:"Hayy Al-Mustafa"},
+{id:"gov_10_area_035",name:"حي الكاطون",nameEn:"Hayy Al-Katoon"},
+{id:"gov_10_area_036",name:"حي بعقوبة الجديدة",nameEn:"Hayy Baquba Al-Jadida"},
+{id:"gov_10_area_037",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_10_area_038",name:"حي الأمين",nameEn:"Hayy Al-Ameen"},
+{id:"gov_10_area_039",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_10_area_040",name:"حي المفتي",nameEn:"Hayy Al-Mufti"},
+{id:"gov_10_area_041",name:"حي المعلمين الأول",nameEn:"Hayy Al-Mualimin Al-Awwal"},
+{id:"gov_10_area_042",name:"حي المعلمين الثاني",nameEn:"Hayy Al-Mualimin Al-Thani"},
+{id:"gov_10_area_043",name:"حي الخليج",nameEn:"Hayy Al-Khalij"},
+{id:"gov_10_area_044",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_10_area_045",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_10_area_046",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_10_area_047",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_10_area_048",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_10_area_049",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_10_area_050",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_10_area_051",name:"حي الربيع",nameEn:"Hayy Al-Rabee"},
+{id:"gov_10_area_052",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_10_area_053",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_10_area_054",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_10_area_055",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_10_area_056",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_10_area_057",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_10_area_058",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_10_area_059",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_10_area_060",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_10_area_061",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_10_area_062",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_10_area_063",name:"حي النصر الجديد",nameEn:"Hayy Al-Nasr Al-Jadid"},
+{id:"gov_10_area_064",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_10_area_065",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_10_area_066",name:"حي البساتين",nameEn:"Hayy Al-Basatin"},
+{id:"gov_10_area_067",name:"حي الرافدين",nameEn:"Hayy Al-Rafidain"},
+{id:"gov_10_area_068",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_10_area_069",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_10_area_070",name:"حي الخالدين",nameEn:"Hayy Al-Khalidin"},
+{id:"gov_10_area_071",name:"حي النهضة",nameEn:"Hayy Al-Nahda"}
+]},
+/* ================= 11. واسط ================= */
+{id:"gov_11",name:"واسط",nameEn:"Wasit",areas:[
+{id:"gov_11_area_001",name:"الكوت",nameEn:"Kut"},
+{id:"gov_11_area_002",name:"الحي",nameEn:"Al-Hayy"},
+{id:"gov_11_area_003",name:"النعمانية",nameEn:"Al-Numaniya"},
+{id:"gov_11_area_004",name:"الصويرة",nameEn:"Al-Suwaira"},
+{id:"gov_11_area_005",name:"العزيزية",nameEn:"Al-Aziziya"},
+{id:"gov_11_area_006",name:"بدرة",nameEn:"Badra"},
+{id:"gov_11_area_007",name:"الزبيدية",nameEn:"Al-Zubaidiya"},
+{id:"gov_11_area_008",name:"الموفقية",nameEn:"Al-Muwaffaqiya"},
+{id:"gov_11_area_009",name:"الأحرار",nameEn:"Al-Ahrar"},
+{id:"gov_11_area_010",name:"شيخ سعد",nameEn:"Sheikh Saad"},
+{id:"gov_11_area_011",name:"واسط",nameEn:"Wasit"},
+{id:"gov_11_area_012",name:"الدبوني",nameEn:"Al-Dabuni"},
+{id:"gov_11_area_013",name:"تاج الدين",nameEn:"Taj Al-Din"},
+{id:"gov_11_area_014",name:"جصان",nameEn:"Jassan"},
+{id:"gov_11_area_015",name:"زرباطية",nameEn:"Zurbatiya"},
+{id:"gov_11_area_016",name:"الشحيمية",nameEn:"Al-Shahimiya"},
+{id:"gov_11_area_017",name:"سيد الشهداء",nameEn:"Sayyid Al-Shuhada"},
+{id:"gov_11_area_018",name:"البشائر",nameEn:"Al-Bashair"},
+{id:"gov_11_area_019",name:"الحفرية",nameEn:"Al-Hafriya"},
+{id:"gov_11_area_020",name:"الدجيلة",nameEn:"Al-Dujaila"},
+{id:"gov_11_area_021",name:"الموفقية الجديدة",nameEn:"Al-Muwaffaqiya Al-Jadida"},
+{id:"gov_11_area_022",name:"حي داموك",nameEn:"Hayy Damuk"},
+{id:"gov_11_area_023",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_11_area_024",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_11_area_025",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_11_area_026",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_11_area_027",name:"حي الجهاد",nameEn:"Hayy Al-Jihad"},
+{id:"gov_11_area_028",name:"حي الخاجية",nameEn:"Hayy Al-Khajiya"},
+{id:"gov_11_area_029",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_11_area_030",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_11_area_031",name:"حي الجعفرية",nameEn:"Hayy Al-Jaafariya"},
+{id:"gov_11_area_032",name:"حي الحكيم",nameEn:"Hayy Al-Hakim"},
+{id:"gov_11_area_033",name:"حي الربيع",nameEn:"Hayy Al-Rabee"},
+{id:"gov_11_area_034",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_11_area_035",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_11_area_036",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_11_area_037",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_11_area_038",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_11_area_039",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_11_area_040",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_11_area_041",name:"حي الزهراء الجديدة",nameEn:"Hayy Al-Zahraa Al-Jadida"},
+{id:"gov_11_area_042",name:"حي الكرامة",nameEn:"Hayy Al-Karama"},
+{id:"gov_11_area_043",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_11_area_044",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_11_area_045",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_11_area_046",name:"حي الثورة",nameEn:"Hayy Al-Thawra"},
+{id:"gov_11_area_047",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_11_area_048",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_11_area_049",name:"حي الحسين الجديد",nameEn:"Hayy Al-Hussein Al-Jadid"},
+{id:"gov_11_area_050",name:"حي الكفاءات",nameEn:"Hayy Al-Kafaat"},
+{id:"gov_11_area_051",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_11_area_052",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_11_area_053",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_11_area_054",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_11_area_055",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_11_area_056",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_11_area_057",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_11_area_058",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_11_area_059",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_11_area_060",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_11_area_061",name:"حي النهضة",nameEn:"Hayy Al-Nahda"},
+{id:"gov_11_area_062",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_11_area_063",name:"حي البساتين",nameEn:"Hayy Al-Basatin"},
+{id:"gov_11_area_064",name:"حي الرافدين",nameEn:"Hayy Al-Rafidain"},
+{id:"gov_11_area_065",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_11_area_066",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_11_area_067",name:"حي الصدر",nameEn:"Hayy Al-Sadr"},
+{id:"gov_11_area_068",name:"حي الكوت الجديدة",nameEn:"Hayy Al-Kut Al-Jadida"},
+{id:"gov_11_area_069",name:"حي الفلاحية",nameEn:"Hayy Al-Falahiya"},
+{id:"gov_11_area_070",name:"حي الحكيم الجديد",nameEn:"Hayy Al-Hakim Al-Jadid"}
+]},
+/* ================= 12. بابل ================= */
+{id:"gov_12",name:"بابل",nameEn:"Babil",areas:[
+{id:"gov_12_area_001",name:"الحلة",nameEn:"Hillah"},
+{id:"gov_12_area_002",name:"المحاويل",nameEn:"Al-Mahaweel"},
+{id:"gov_12_area_003",name:"المسيب",nameEn:"Al-Musayyib"},
+{id:"gov_12_area_004",name:"الهاشمية",nameEn:"Al-Hashimiya"},
+{id:"gov_12_area_005",name:"القاسم",nameEn:"Al-Qasim"},
+{id:"gov_12_area_006",name:"الكفل",nameEn:"Al-Kifl"},
+{id:"gov_12_area_007",name:"الإسكندرية",nameEn:"Al-Iskandariya"},
+{id:"gov_12_area_008",name:"المدحتية",nameEn:"Al-Madhatiya"},
+{id:"gov_12_area_009",name:"أبي غرق",nameEn:"Abi Gharaq"},
+{id:"gov_12_area_010",name:"النيل",nameEn:"Al-Nil"},
+{id:"gov_12_area_011",name:"الشوملي",nameEn:"Al-Shomali"},
+{id:"gov_12_area_012",name:"سدة الهندية",nameEn:"Saddat Al-Hindiya"},
+{id:"gov_12_area_013",name:"جرف الصخر",nameEn:"Jurf Al-Sakhar"},
+{id:"gov_12_area_014",name:"الإمام",nameEn:"Al-Imam"},
+{id:"gov_12_area_015",name:"الطليعة",nameEn:"Al-Tali'a"},
+{id:"gov_12_area_016",name:"مشروع المسيب",nameEn:"Mashroo Al-Musayyib"},
+{id:"gov_12_area_017",name:"البحيرات",nameEn:"Al-Buhayrat"},
+{id:"gov_12_area_018",name:"البوعيسى",nameEn:"Al-Bu Issa"},
+{id:"gov_12_area_019",name:"الكفل الجديدة",nameEn:"Al-Kifl Al-Jadida"},
+{id:"gov_12_area_020",name:"الرارنجية",nameEn:"Al-Raranjiya"},
+{id:"gov_12_area_021",name:"الكرامة",nameEn:"Al-Karama"},
+{id:"gov_12_area_022",name:"البكرلي",nameEn:"Al-Bakri"},
+{id:"gov_12_area_023",name:"حي بابل",nameEn:"Hayy Babil"},
+{id:"gov_12_area_024",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_12_area_025",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_12_area_026",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_12_area_027",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_12_area_028",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_12_area_029",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_12_area_030",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_12_area_031",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_12_area_032",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_12_area_033",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_12_area_034",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_12_area_035",name:"حي الثورة",nameEn:"Hayy Al-Thawra"},
+{id:"gov_12_area_036",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_12_area_037",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_12_area_038",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_12_area_039",name:"حي الجهاد",nameEn:"Hayy Al-Jihad"},
+{id:"gov_12_area_040",name:"حي الأمير",nameEn:"Hayy Al-Amir"},
+{id:"gov_12_area_041",name:"حي النخيل",nameEn:"Hayy Al-Nakhil"},
+{id:"gov_12_area_042",name:"حي بابل الجديدة",nameEn:"Hayy Babil Al-Jadida"},
+{id:"gov_12_area_043",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_12_area_044",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_12_area_045",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_12_area_046",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_12_area_047",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_12_area_048",name:"حي الكرامة",nameEn:"Hayy Al-Karama"},
+{id:"gov_12_area_049",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_12_area_050",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_12_area_051",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_12_area_052",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_12_area_053",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_12_area_054",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_12_area_055",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_12_area_056",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_12_area_057",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_12_area_058",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_12_area_059",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_12_area_060",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_12_area_061",name:"حي الفرات",nameEn:"Hayy Al-Furat"},
+{id:"gov_12_area_062",name:"حي الإمام",nameEn:"Hayy Al-Imam"},
+{id:"gov_12_area_063",name:"حي الحسين الجديد",nameEn:"Hayy Al-Hussein Al-Jadid"},
+{id:"gov_12_area_064",name:"حي القاسم",nameEn:"Hayy Al-Qasim"},
+{id:"gov_12_area_065",name:"حي الهاشمية",nameEn:"Hayy Al-Hashimiya"},
+{id:"gov_12_area_066",name:"حي المحاويل",nameEn:"Hayy Al-Mahaweel"},
+{id:"gov_12_area_067",name:"حي المسيب",nameEn:"Hayy Al-Musayyib"},
+{id:"gov_12_area_068",name:"حي الإسكندرية",nameEn:"Hayy Al-Iskandariya"},
+{id:"gov_12_area_069",name:"حي الكفل",nameEn:"Hayy Al-Kifl"},
+{id:"gov_12_area_070",name:"حي المدحتية",nameEn:"Hayy Al-Madhatiya"}
+]},
+/* ================= 13. كربلاء ================= */
+{id:"gov_13",name:"كربلاء",nameEn:"Karbala",areas:[
+{id:"gov_13_area_001",name:"كربلاء",nameEn:"Karbala"},
+{id:"gov_13_area_002",name:"العباسية",nameEn:"Al-Abbasiya"},
+{id:"gov_13_area_003",name:"الحر",nameEn:"Al-Hurr"},
+{id:"gov_13_area_004",name:"الحسينية",nameEn:"Al-Husseiniya"},
+{id:"gov_13_area_005",name:"الجدول الغربي",nameEn:"Al-Jadwal Al-Gharbi"},
+{id:"gov_13_area_006",name:"عون",nameEn:"Awn"},
+{id:"gov_13_area_007",name:"الهندية",nameEn:"Al-Hindiya"},
+{id:"gov_13_area_008",name:"الخيرات",nameEn:"Al-Khairat"},
+{id:"gov_13_area_009",name:"عين التمر",nameEn:"Ain Al-Tamr"},
+{id:"gov_13_area_010",name:"الوند",nameEn:"Al-Wand"},
+{id:"gov_13_area_011",name:"حصيبة",nameEn:"Husaiba"},
+{id:"gov_13_area_012",name:"الإبراهيمية",nameEn:"Al-Ibrahimiyah"},
+{id:"gov_13_area_013",name:"فريحة",nameEn:"Fariha"},
+{id:"gov_13_area_014",name:"الطف",nameEn:"Al-Taff"},
+{id:"gov_13_area_015",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_13_area_016",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_13_area_017",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_13_area_018",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_13_area_019",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_13_area_020",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_13_area_021",name:"حي العباس",nameEn:"Hayy Al-Abbas"},
+{id:"gov_13_area_022",name:"حي الغدير",nameEn:"Hayy Al-Ghadeer"},
+{id:"gov_13_area_023",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_13_area_024",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_13_area_025",name:"حي الحرية",nameEn:"Hayy Al-Hurriya"},
+{id:"gov_13_area_026",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_13_area_027",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_13_area_028",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_13_area_029",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_13_area_030",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_13_area_031",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_13_area_032",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_13_area_033",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_13_area_034",name:"حي العامل",nameEn:"Hayy Al-Aamil"},
+{id:"gov_13_area_035",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_13_area_036",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_13_area_037",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_13_area_038",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_13_area_039",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_13_area_040",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_13_area_041",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_13_area_042",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_13_area_043",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_13_area_044",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_13_area_045",name:"حي النخيل",nameEn:"Hayy Al-Nakhil"},
+{id:"gov_13_area_046",name:"حي الوفاء",nameEn:"Hayy Al-Wafaa"},
+{id:"gov_13_area_047",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_13_area_048",name:"حي البارودي",nameEn:"Hayy Al-Baroudi"},
+{id:"gov_13_area_049",name:"حي الفرات",nameEn:"Hayy Al-Furat"},
+{id:"gov_13_area_050",name:"حي الحسين الجديد",nameEn:"Hayy Al-Hussein Al-Jadid"},
+{id:"gov_13_area_051",name:"حي العباس الجديد",nameEn:"Hayy Al-Abbas Al-Jadid"},
+{id:"gov_13_area_052",name:"حي الحر الجديد",nameEn:"Hayy Al-Hurr Al-Jadid"},
+{id:"gov_13_area_053",name:"حي العامل الجديد",nameEn:"Hayy Al-Aamil Al-Jadid"},
+{id:"gov_13_area_054",name:"حي العسكري الجديد",nameEn:"Hayy Al-Askari Al-Jadid"},
+{id:"gov_13_area_055",name:"حي الغدير الجديد",nameEn:"Hayy Al-Ghadeer Al-Jadid"},
+{id:"gov_13_area_056",name:"حي الإسكان الجديد",nameEn:"Hayy Al-Iskan Al-Jadid"},
+{id:"gov_13_area_057",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_13_area_058",name:"حي الموظفين الجديد",nameEn:"Hayy Al-Muwazzafin Al-Jadid"},
+{id:"gov_13_area_059",name:"حي الشهداء الجديد",nameEn:"Hayy Al-Shuhada Al-Jadid"},
+{id:"gov_13_area_060",name:"حي القادسية الجديد",nameEn:"Hayy Al-Qadisiya Al-Jadid"}
+]},
+/* ================= 14. النجف ================= */
+{id:"gov_14",name:"النجف",nameEn:"Najaf",areas:[
+{id:"gov_14_area_001",name:"النجف",nameEn:"Najaf"},
+{id:"gov_14_area_002",name:"المدينة القديمة",nameEn:"Al-Madina Al-Qadima"},
+{id:"gov_14_area_003",name:"المشراق",nameEn:"Al-Mishraq"},
+{id:"gov_14_area_004",name:"البراق",nameEn:"Al-Buraq"},
+{id:"gov_14_area_005",name:"العمارة",nameEn:"Al-Umara"},
+{id:"gov_14_area_006",name:"الحويش",nameEn:"Al-Huwaish"},
+{id:"gov_14_area_007",name:"الجديدات",nameEn:"Al-Jadidat"},
+{id:"gov_14_area_008",name:"السعد",nameEn:"Al-Saad"},
+{id:"gov_14_area_009",name:"المثنى",nameEn:"Al-Muthanna"},
+{id:"gov_14_area_010",name:"أبو طالب",nameEn:"Abu Talib"},
+{id:"gov_14_area_011",name:"الحنانة",nameEn:"Al-Hanana"},
+{id:"gov_14_area_012",name:"الحسين",nameEn:"Al-Hussein"},
+{id:"gov_14_area_013",name:"الصحة",nameEn:"Al-Sihha"},
+{id:"gov_14_area_014",name:"الكرامة",nameEn:"Al-Karama"},
+{id:"gov_14_area_015",name:"الغدير",nameEn:"Al-Ghadeer"},
+{id:"gov_14_area_016",name:"الأمير",nameEn:"Al-Amir"},
+{id:"gov_14_area_017",name:"الإسكان",nameEn:"Al-Iskan"},
+{id:"gov_14_area_018",name:"الاشتراكي",nameEn:"Al-Ishtiraki"},
+{id:"gov_14_area_019",name:"المعلمين",nameEn:"Al-Mualimin"},
+{id:"gov_14_area_020",name:"العسكري",nameEn:"Al-Askari"},
+{id:"gov_14_area_021",name:"الإمام علي",nameEn:"Imam Ali"},
+{id:"gov_14_area_022",name:"الزهراء",nameEn:"Al-Zahraa"},
+{id:"gov_14_area_023",name:"القادسية",nameEn:"Al-Qadisiya"},
+{id:"gov_14_area_024",name:"الأنصار",nameEn:"Al-Ansar"},
+{id:"gov_14_area_025",name:"القدس 1",nameEn:"Al-Quds 1"},
+{id:"gov_14_area_026",name:"القدس 2",nameEn:"Al-Quds 2"},
+{id:"gov_14_area_027",name:"العدالة",nameEn:"Al-Adala"},
+{id:"gov_14_area_028",name:"الفرات",nameEn:"Al-Furat"},
+{id:"gov_14_area_029",name:"السلام",nameEn:"Al-Salam"},
+{id:"gov_14_area_030",name:"السلام الجديد",nameEn:"Al-Salam Al-Jadid"},
+{id:"gov_14_area_031",name:"الجامعة",nameEn:"Al-Jamia"},
+{id:"gov_14_area_032",name:"الوفاء",nameEn:"Al-Wafaa"},
+{id:"gov_14_area_033",name:"العروبة",nameEn:"Al-Orouba"},
+{id:"gov_14_area_034",name:"الجمعية",nameEn:"Al-Jamiiya"},
+{id:"gov_14_area_035",name:"الهندية",nameEn:"Al-Hindiya"},
+{id:"gov_14_area_036",name:"المهدي",nameEn:"Al-Mahdi"},
+{id:"gov_14_area_037",name:"العلماء",nameEn:"Al-Ulama"},
+{id:"gov_14_area_038",name:"الشعراء",nameEn:"Al-Shuaraa"},
+{id:"gov_14_area_039",name:"الشرطة",nameEn:"Al-Shorta"},
+{id:"gov_14_area_040",name:"الثورة",nameEn:"Al-Thawra"},
+{id:"gov_14_area_041",name:"الغري",nameEn:"Al-Ghari"},
+{id:"gov_14_area_042",name:"الكرمة",nameEn:"Al-Karma"},
+{id:"gov_14_area_043",name:"النصر",nameEn:"Al-Nasr"},
+{id:"gov_14_area_044",name:"الميلاد",nameEn:"Al-Milad"},
+{id:"gov_14_area_045",name:"الميلاد الجديد",nameEn:"Al-Milad Al-Jadid"},
+{id:"gov_14_area_046",name:"الرحمة",nameEn:"Al-Rahma"},
+{id:"gov_14_area_047",name:"الرضوية",nameEn:"Al-Radhwiya"},
+{id:"gov_14_area_048",name:"أبو خالد",nameEn:"Abu Khalid"},
+{id:"gov_14_area_049",name:"الأطباء",nameEn:"Al-Atibaa"},
+{id:"gov_14_area_050",name:"النفط",nameEn:"Al-Naft"},
+{id:"gov_14_area_051",name:"ميسان",nameEn:"Maysan"},
+{id:"gov_14_area_052",name:"الفرات الجديد",nameEn:"Al-Furat Al-Jadid"},
+{id:"gov_14_area_053",name:"حي الأمير",nameEn:"Hayy Al-Amir"},
+{id:"gov_14_area_054",name:"حي الأنصار",nameEn:"Hayy Al-Ansar"},
+{id:"gov_14_area_055",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_14_area_056",name:"حي الوفاء",nameEn:"Hayy Al-Wafaa"},
+{id:"gov_14_area_057",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_14_area_058",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_14_area_059",name:"الكوفة",nameEn:"Kufa"},
+{id:"gov_14_area_060",name:"السراي",nameEn:"Al-Saray"},
+{id:"gov_14_area_061",name:"الجمهورية",nameEn:"Al-Jumhuriya"},
+{id:"gov_14_area_062",name:"الرشادية الأولى",nameEn:"Al-Rashidiya Al-Oula"},
+{id:"gov_14_area_063",name:"الرشادية الثانية",nameEn:"Al-Rashidiya Al-Thaniya"},
+{id:"gov_14_area_064",name:"كندة",nameEn:"Kinda"},
+{id:"gov_14_area_065",name:"ميثم التمار",nameEn:"Maytham Al-Tammar"},
+{id:"gov_14_area_066",name:"المتنبي",nameEn:"Al-Mutanabbi"},
+{id:"gov_14_area_067",name:"العباسية",nameEn:"Al-Abbasiya"},
+{id:"gov_14_area_068",name:"الحرية",nameEn:"Al-Hurriya"},
+{id:"gov_14_area_069",name:"المناذرة",nameEn:"Al-Manathera"},
+{id:"gov_14_area_070",name:"أبو صخير",nameEn:"Abu Sakheer"},
+{id:"gov_14_area_071",name:"الحيرة",nameEn:"Al-Hira"},
+{id:"gov_14_area_072",name:"المشخاب",nameEn:"Al-Mishkhab"},
+{id:"gov_14_area_073",name:"الحيدرية",nameEn:"Al-Haidariya"},
+{id:"gov_14_area_074",name:"الحيرة الجديدة",nameEn:"Al-Hira Al-Jadida"},
+{id:"gov_14_area_075",name:"المشخاب الجديدة",nameEn:"Al-Mishkhab Al-Jadida"},
+{id:"gov_14_area_076",name:"أبو صخير الجديدة",nameEn:"Abu Sakheer Al-Jadida"}
+]},
+/* ================= 15. القادسية ================= */
+{id:"gov_15",name:"القادسية",nameEn:"Al-Qadisiyah",areas:[
+{id:"gov_15_area_001",name:"الديوانية",nameEn:"Diwaniya"},
+{id:"gov_15_area_002",name:"عفك",nameEn:"Afak"},
+{id:"gov_15_area_003",name:"الشامية",nameEn:"Shamiya"},
+{id:"gov_15_area_004",name:"الحمزة",nameEn:"Hamza"},
+{id:"gov_15_area_005",name:"الشنافية",nameEn:"Shinafiya"},
+{id:"gov_15_area_006",name:"غماس",nameEn:"Ghammas"},
+{id:"gov_15_area_007",name:"سومر",nameEn:"Sumer"},
+{id:"gov_15_area_008",name:"الدغارة",nameEn:"Daghara"},
+{id:"gov_15_area_009",name:"السنية",nameEn:"Sunniya"},
+{id:"gov_15_area_010",name:"البدير",nameEn:"Al-Budair"},
+{id:"gov_15_area_011",name:"نفر",nameEn:"Nafar"},
+{id:"gov_15_area_012",name:"الصلاحية",nameEn:"Al-Salahiya"},
+{id:"gov_15_area_013",name:"آل بدير",nameEn:"Al-Budair"},
+{id:"gov_15_area_014",name:"الشافعية",nameEn:"Al-Shafiya"},
+{id:"gov_15_area_015",name:"المهناوية",nameEn:"Al-Mahnawea"},
+{id:"gov_15_area_016",name:"غماس الجديدة",nameEn:"Ghammas Al-Jadida"},
+{id:"gov_15_area_017",name:"الدغارة الجديدة",nameEn:"Daghara Al-Jadida"},
+{id:"gov_15_area_018",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_15_area_019",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_15_area_020",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_15_area_021",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_15_area_022",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_15_area_023",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_15_area_024",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_15_area_025",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_15_area_026",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_15_area_027",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_15_area_028",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_15_area_029",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_15_area_030",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_15_area_031",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_15_area_032",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_15_area_033",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_15_area_034",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_15_area_035",name:"حي الثورة",nameEn:"Hayy Al-Thawra"},
+{id:"gov_15_area_036",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_15_area_037",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_15_area_038",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_15_area_039",name:"حي الفرات",nameEn:"Hayy Al-Furat"},
+{id:"gov_15_area_040",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_15_area_041",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_15_area_042",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_15_area_043",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_15_area_044",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_15_area_045",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_15_area_046",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_15_area_047",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_15_area_048",name:"حي الكرامة",nameEn:"Hayy Al-Karama"},
+{id:"gov_15_area_049",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_15_area_050",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_15_area_051",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_15_area_052",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_15_area_053",name:"حي الإمام",nameEn:"Hayy Al-Imam"},
+{id:"gov_15_area_054",name:"حي الأمير",nameEn:"Hayy Al-Amir"},
+{id:"gov_15_area_055",name:"حي الحكيم",nameEn:"Hayy Al-Hakim"},
+{id:"gov_15_area_056",name:"حي الجهاد",nameEn:"Hayy Al-Jihad"},
+{id:"gov_15_area_057",name:"حي العامل",nameEn:"Hayy Al-Aamil"},
+{id:"gov_15_area_058",name:"حي القادسية الجديدة",nameEn:"Hayy Al-Qadisiya Al-Jadida"},
+{id:"gov_15_area_059",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_15_area_060",name:"حي الإسكان الجديد",nameEn:"Hayy Al-Iskan Al-Jadid"}
+]},
+/* ================= 16. المثنى ================= */
+{id:"gov_16",name:"المثنى",nameEn:"Al-Muthanna",areas:[
+{id:"gov_16_area_001",name:"السماوة",nameEn:"Samawa"},
+{id:"gov_16_area_002",name:"الرميثة",nameEn:"Rumaitha"},
+{id:"gov_16_area_003",name:"الخضر",nameEn:"Al-Khader"},
+{id:"gov_16_area_004",name:"الوركاء",nameEn:"Al-Warka"},
+{id:"gov_16_area_005",name:"السوير",nameEn:"Al-Suwair"},
+{id:"gov_16_area_006",name:"المجد",nameEn:"Al-Majd"},
+{id:"gov_16_area_007",name:"الهلال",nameEn:"Al-Hilal"},
+{id:"gov_16_area_008",name:"بصية",nameEn:"Basiyah"},
+{id:"gov_16_area_009",name:"النجمي",nameEn:"Al-Najmi"},
+{id:"gov_16_area_010",name:"الدراجي",nameEn:"Al-Daraji"},
+{id:"gov_16_area_011",name:"آل بدير",nameEn:"Al-Budair"},
+{id:"gov_16_area_012",name:"السلمان",nameEn:"Al-Salman"},
+{id:"gov_16_area_013",name:"الحضر",nameEn:"Al-Hadar"},
+{id:"gov_16_area_014",name:"العطشان",nameEn:"Al-Atshan"},
+{id:"gov_16_area_015",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_16_area_016",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_16_area_017",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_16_area_018",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_16_area_019",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_16_area_020",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_16_area_021",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_16_area_022",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_16_area_023",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_16_area_024",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_16_area_025",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_16_area_026",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_16_area_027",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_16_area_028",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_16_area_029",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_16_area_030",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_16_area_031",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_16_area_032",name:"حي الثورة",nameEn:"Hayy Al-Thawra"},
+{id:"gov_16_area_033",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_16_area_034",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_16_area_035",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_16_area_036",name:"حي الفرات",nameEn:"Hayy Al-Furat"},
+{id:"gov_16_area_037",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_16_area_038",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_16_area_039",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_16_area_040",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_16_area_041",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_16_area_042",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_16_area_043",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_16_area_044",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_16_area_045",name:"حي الكرامة",nameEn:"Hayy Al-Karama"},
+{id:"gov_16_area_046",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_16_area_047",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_16_area_048",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_16_area_049",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_16_area_050",name:"حي الإمام",nameEn:"Hayy Al-Imam"},
+{id:"gov_16_area_051",name:"حي الأمير",nameEn:"Hayy Al-Amir"},
+{id:"gov_16_area_052",name:"حي الحكيم",nameEn:"Hayy Al-Hakim"},
+{id:"gov_16_area_053",name:"حي الجهاد",nameEn:"Hayy Al-Jihad"},
+{id:"gov_16_area_054",name:"حي العامل",nameEn:"Hayy Al-Aamil"},
+{id:"gov_16_area_055",name:"حي السماوة الجديدة",nameEn:"Hayy Al-Samawa Al-Jadida"},
+{id:"gov_16_area_056",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_16_area_057",name:"حي الإسكان الجديد",nameEn:"Hayy Al-Iskan Al-Jadid"},
+{id:"gov_16_area_058",name:"حي القادسية الجديدة",nameEn:"Hayy Al-Qadisiya Al-Jadida"}
+]},
+/* ================= 17. ذي قار ================= */
+{id:"gov_17",name:"ذي قار",nameEn:"Dhi Qar",areas:[
+{id:"gov_17_area_001",name:"الناصرية",nameEn:"Nasiriya"},
+{id:"gov_17_area_002",name:"الشطرة",nameEn:"Shatra"},
+{id:"gov_17_area_003",name:"الرفاعي",nameEn:"Al-Rifai"},
+{id:"gov_17_area_004",name:"سوق الشيوخ",nameEn:"Souq Al-Shuyukh"},
+{id:"gov_17_area_005",name:"الجبايش",nameEn:"Al-Chibayish"},
+{id:"gov_17_area_006",name:"قلعة سكر",nameEn:"Qalat Sukkar"},
+{id:"gov_17_area_007",name:"الغراف",nameEn:"Al-Gharraf"},
+{id:"gov_17_area_008",name:"الفهود",nameEn:"Al-Fuhud"},
+{id:"gov_17_area_009",name:"الإصلاح",nameEn:"Al-Islah"},
+{id:"gov_17_area_010",name:"الدواية",nameEn:"Al-Dawaya"},
+{id:"gov_17_area_011",name:"النصر",nameEn:"Al-Nasr"},
+{id:"gov_17_area_012",name:"سيد دخيل",nameEn:"Sayyid Dakhil"},
+{id:"gov_17_area_013",name:"الفضلية",nameEn:"Al-Fadliya"},
+{id:"gov_17_area_014",name:"البطحاء",nameEn:"Al-Batha"},
+{id:"gov_17_area_015",name:"كرمة بني سعيد",nameEn:"Karmat Bani Said"},
+{id:"gov_17_area_016",name:"العكيكة",nameEn:"Al-Akaika"},
+{id:"gov_17_area_017",name:"أور",nameEn:"Ur"},
+{id:"gov_17_area_018",name:"ناحية الخير",nameEn:"Al-Khair"},
+{id:"gov_17_area_019",name:"الطار",nameEn:"Al-Tar"},
+{id:"gov_17_area_020",name:"ميسان",nameEn:"Maysan"},
+{id:"gov_17_area_021",name:"حي سومر",nameEn:"Hayy Sumer"},
+{id:"gov_17_area_022",name:"حي الشهداء",nameEn:"Hayy Al-Shuhada"},
+{id:"gov_17_area_023",name:"حي المعلمين",nameEn:"Hayy Al-Mualimin"},
+{id:"gov_17_area_024",name:"حي الضباط",nameEn:"Hayy Al-Dhubbat"},
+{id:"gov_17_area_025",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_17_area_026",name:"حي العسكري",nameEn:"Hayy Al-Askari"},
+{id:"gov_17_area_027",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_17_area_028",name:"حي المهندسين",nameEn:"Hayy Al-Muhandisin"},
+{id:"gov_17_area_029",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_17_area_030",name:"حي الإسكان",nameEn:"Hayy Al-Iskan"},
+{id:"gov_17_area_031",name:"حي الجمعية",nameEn:"Hayy Al-Jamiiya"},
+{id:"gov_17_area_032",name:"حي الوحدة",nameEn:"Hayy Al-Wahda"},
+{id:"gov_17_area_033",name:"حي السلام",nameEn:"Hayy Al-Salam"},
+{id:"gov_17_area_034",name:"حي النصر",nameEn:"Hayy Al-Nasr"},
+{id:"gov_17_area_035",name:"حي القادسية",nameEn:"Hayy Al-Qadisiya"},
+{id:"gov_17_area_036",name:"حي الزهراء",nameEn:"Hayy Al-Zahraa"},
+{id:"gov_17_area_037",name:"حي اليرموك",nameEn:"Hayy Al-Yarmouk"},
+{id:"gov_17_area_038",name:"حي العروبة",nameEn:"Hayy Al-Orouba"},
+{id:"gov_17_area_039",name:"حي الثورة",nameEn:"Hayy Al-Thawra"},
+{id:"gov_17_area_040",name:"حي التحرير",nameEn:"Hayy Al-Tahrir"},
+{id:"gov_17_area_041",name:"حي الخضراء",nameEn:"Hayy Al-Khadraa"},
+{id:"gov_17_area_042",name:"حي الأندلس",nameEn:"Hayy Al-Andalus"},
+{id:"gov_17_area_043",name:"حي الفرات",nameEn:"Hayy Al-Furat"},
+{id:"gov_17_area_044",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_17_area_045",name:"حي الصناعة",nameEn:"Hayy Al-Sinaa"},
+{id:"gov_17_area_046",name:"حي البلدية",nameEn:"Hayy Al-Baladiya"},
+{id:"gov_17_area_047",name:"حي المستشفى",nameEn:"Hayy Al-Mustashfa"},
+{id:"gov_17_area_048",name:"حي السوق",nameEn:"Hayy Al-Souq"},
+{id:"gov_17_area_049",name:"حي السراي",nameEn:"Hayy Al-Saray"},
+{id:"gov_17_area_050",name:"حي الجسر",nameEn:"Hayy Al-Jisr"},
+{id:"gov_17_area_051",name:"حي القلعة",nameEn:"Hayy Al-Qalaa"},
+{id:"gov_17_area_052",name:"حي الكرامة",nameEn:"Hayy Al-Karama"},
+{id:"gov_17_area_053",name:"حي الرحمة",nameEn:"Hayy Al-Rahma"},
+{id:"gov_17_area_054",name:"حي النور",nameEn:"Hayy Al-Noor"},
+{id:"gov_17_area_055",name:"حي الزهور",nameEn:"Hayy Al-Zuhur"},
+{id:"gov_17_area_056",name:"حي الحسين",nameEn:"Hayy Al-Hussein"},
+{id:"gov_17_area_057",name:"حي الإمام",nameEn:"Hayy Al-Imam"},
+{id:"gov_17_area_058",name:"حي الأمير",nameEn:"Hayy Al-Amir"},
+{id:"gov_17_area_059",name:"حي الحكيم",nameEn:"Hayy Al-Hakim"},
+{id:"gov_17_area_060",name:"حي الجهاد",nameEn:"Hayy Al-Jihad"},
+{id:"gov_17_area_061",name:"حي العامل",nameEn:"Hayy Al-Aamil"},
+{id:"gov_17_area_062",name:"حي السماوة",nameEn:"Hayy Al-Samawa"},
+{id:"gov_17_area_063",name:"حي سومر الجديد",nameEn:"Hayy Sumer Al-Jadid"},
+{id:"gov_17_area_064",name:"حي الصدر",nameEn:"Hayy Al-Sadr"},
+{id:"gov_17_area_065",name:"حي أور",nameEn:"Hayy Ur"},
+{id:"gov_17_area_066",name:"حي الشموخ",nameEn:"Hayy Al-Shumukh"},
+{id:"gov_17_area_067",name:"حي الإسكان الجديد",nameEn:"Hayy Al-Iskan Al-Jadid"},
+{id:"gov_17_area_068",name:"حي المعلمين الجديد",nameEn:"Hayy Al-Mualimin Al-Jadid"},
+{id:"gov_17_area_069",name:"حي القادسية الجديدة",nameEn:"Hayy Al-Qadisiya Al-Jadida"},
+{id:"gov_17_area_070",name:"حي النصر الجديد",nameEn:"Hayy Al-Nasr Al-Jadid"}
+]},
+/* ================= 18. ميسان ================= */
+{id:"gov_18",name:"ميسان",nameEn:"Maysan",areas:[
+{id:"gov_18_area_001",name:"العمارة",nameEn:"Al-Amarah"},
+{id:"gov_18_area_002",name:"الماجدية",nameEn:"Al-Majdiya"},
+{id:"gov_18_area_003",name:"السرية",nameEn:"Al-Sariya"},
+{id:"gov_18_area_004",name:"السراي",nameEn:"Al-Saray"},
+{id:"gov_18_area_005",name:"القادرية",nameEn:"Al-Qadiriya"},
+{id:"gov_18_area_006",name:"المحمودية",nameEn:"Al-Mahmudiya"},
+{id:"gov_18_area_007",name:"الصابونجية",nameEn:"Al-Sabunjiya"},
+{id:"gov_18_area_008",name:"الشبانة",nameEn:"Al-Shabana"},
+{id:"gov_18_area_009",name:"الدبيسات",nameEn:"Al-Dubaysat"},
+{id:"gov_18_area_010",name:"القاهرة",nameEn:"Al-Qahira"},
+{id:"gov_18_area_011",name:"المعلمين",nameEn:"Al-Muallimin"},
+{id:"gov_18_area_012",name:"الزهراء",nameEn:"Al-Zahraa"},
+{id:"gov_18_area_013",name:"الصدر",nameEn:"Al-Sadr"},
+{id:"gov_18_area_014",name:"العسكري",nameEn:"Al-Askari"},
+{id:"gov_18_area_015",name:"المهندسين",nameEn:"Al-Muhandisin"},
+{id:"gov_18_area_016",name:"الجهاد",nameEn:"Al-Jihad"},
+{id:"gov_18_area_017",name:"الرسالة",nameEn:"Al-Risala"},
+{id:"gov_18_area_018",name:"الربيع",nameEn:"Al-Rabia"},
+{id:"gov_18_area_019",name:"الحسين",nameEn:"Al-Hussein"},
+{id:"gov_18_area_020",name:"السلام",nameEn:"Al-Salam"},
+{id:"gov_18_area_021",name:"النصر",nameEn:"Al-Nasr"},
+{id:"gov_18_area_022",name:"الشهداء",nameEn:"Al-Shuhada"},
+{id:"gov_18_area_023",name:"المصطفى",nameEn:"Al-Mustafa"},
+{id:"gov_18_area_024",name:"الخضراء",nameEn:"Al-Khadraa"},
+{id:"gov_18_area_025",name:"الخليج",nameEn:"Al-Khalij"},
+{id:"gov_18_area_026",name:"قطاع 30",nameEn:"Qita 30"},
+{id:"gov_18_area_027",name:"الاسكان",nameEn:"Al-Iskan"},
+{id:"gov_18_area_028",name:"الأمير",nameEn:"Al-Amir"},
+{id:"gov_18_area_029",name:"الوحدة الإسلامية",nameEn:"Al-Wahda Al-Islamiya"},
+{id:"gov_18_area_030",name:"الجوادين",nameEn:"Al-Jawadain"},
+{id:"gov_18_area_031",name:"دور النفط",nameEn:"Dor Al-Naft"},
+{id:"gov_18_area_032",name:"الجديدة",nameEn:"Al-Jadida"},
+{id:"gov_18_area_033",name:"سيد عاشور",nameEn:"Sayyid Ashur"},
+{id:"gov_18_area_034",name:"الصادق",nameEn:"Al-Sadiq"},
+{id:"gov_18_area_035",name:"17 ربيع الأول",nameEn:"17 Rabi Al-Awwal"},
+{id:"gov_18_area_036",name:"علي الغربي",nameEn:"Ali Al-Gharbi"},
+{id:"gov_18_area_037",name:"علي الشرقي",nameEn:"Ali Al-Sharqi"},
+{id:"gov_18_area_038",name:"المجر الكبير",nameEn:"Al-Majar Al-Kabir"},
+{id:"gov_18_area_039",name:"العدل",nameEn:"Al-Adel"},
+{id:"gov_18_area_040",name:"الخير",nameEn:"Al-Khair"},
+{id:"gov_18_area_041",name:"قلعة صالح",nameEn:"Qalat Salih"},
+{id:"gov_18_area_042",name:"العزير",nameEn:"Al-Uzair"},
+{id:"gov_18_area_043",name:"الكحلاء",nameEn:"Al-Kahla"},
+{id:"gov_18_area_044",name:"المشرح",nameEn:"Al-Mashrah"},
+{id:"gov_18_area_045",name:"بني هاشم",nameEn:"Bani Hashim"},
+{id:"gov_18_area_046",name:"الميمونة",nameEn:"Al-Maymouna"},
+{id:"gov_18_area_047",name:"سيد أحمد الرفاعي",nameEn:"Sayyid Ahmad Al-Rifai"},
+{id:"gov_18_area_048",name:"كميت",nameEn:"Kumait"},
+{id:"gov_18_area_049",name:"الماجدية الجديدة",nameEn:"Al-Majdiya Al-Jadida"},
+{id:"gov_18_area_050",name:"البتيرة",nameEn:"Al-Batira"},
+{id:"gov_18_area_051",name:"الكرامة",nameEn:"Al-Karama"},
+{id:"gov_18_area_052",name:"حي العامل",nameEn:"Hayy Al-Amil"},
+{id:"gov_18_area_053",name:"حي الجامعة",nameEn:"Hayy Al-Jamia"},
+{id:"gov_18_area_054",name:"حي الشرطة",nameEn:"Hayy Al-Shorta"},
+{id:"gov_18_area_055",name:"حي الأطباء",nameEn:"Hayy Al-Atibaa"},
+{id:"gov_18_area_056",name:"حي الموظفين",nameEn:"Hayy Al-Muwazzafin"},
+{id:"gov_18_area_057",name:"حي الشباب",nameEn:"Hayy Al-Shabab"},
+{id:"gov_18_area_058",name:"حي النفط",nameEn:"Hayy Al-Naft"},
+{id:"gov_18_area_059",name:"حي الرافدين",nameEn:"Hayy Al-Rafidain"}
+]},
+/* ================= 19. حلبجة ================= */
+{id:"gov_19",name:"حلبجة",nameEn:"Halabja",areas:[
+{id:"gov_19_area_001",name:"هەڵەبجە",nameEn:"Halabja"},
+{id:"gov_19_area_002",name:"هەڵەبجەی نوێ",nameEn:"Halabjai Nwe"},
+{id:"gov_19_area_003",name:"سەرا",nameEn:"Sara"},
+{id:"gov_19_area_004",name:"پاشا",nameEn:"Pasha"},
+{id:"gov_19_area_005",name:"پیر محەمەد",nameEn:"Pir Muhammad"},
+{id:"gov_19_area_006",name:"کانی ئاشقان",nameEn:"Kani Ashqan"},
+{id:"gov_19_area_007",name:"شارستانی",nameEn:"Sharistani"},
+{id:"gov_19_area_008",name:"ئازادی",nameEn:"Azadi"},
+{id:"gov_19_area_009",name:"شۆڕش",nameEn:"Shorsh"},
+{id:"gov_19_area_010",name:"ڕاپەڕین",nameEn:"Raperin"},
+{id:"gov_19_area_011",name:"زانکۆ",nameEn:"Zanko"},
+{id:"gov_19_area_012",name:"مامۆستایان",nameEn:"Mamostayan"},
+{id:"gov_19_area_013",name:"شەهیدان",nameEn:"Shahidan"},
+{id:"gov_19_area_014",name:"بەختیاری",nameEn:"Baxtiari"},
+{id:"gov_19_area_015",name:"سەربەستی",nameEn:"Sarbasti"},
+{id:"gov_19_area_016",name:"گۆڕان",nameEn:"Goran"},
+{id:"gov_19_area_017",name:"ئارام",nameEn:"Aram"},
+{id:"gov_19_area_018",name:"کانی با",nameEn:"Kani Ba"},
+{id:"gov_19_area_019",name:"گۆڵان",nameEn:"Gulan"},
+{id:"gov_19_area_020",name:"نێرگەز",nameEn:"Nirgiz"},
+{id:"gov_19_area_021",name:"سیرەوان",nameEn:"Sirwan"},
+{id:"gov_19_area_022",name:"سیرەوانی نوێ",nameEn:"Sirwani Nwe"},
+{id:"gov_19_area_023",name:"خورماڵ",nameEn:"Xurmal"},
+{id:"gov_19_area_024",name:"خورماڵی نوێ",nameEn:"Xurmali Nwe"},
+{id:"gov_19_area_025",name:"بیارە",nameEn:"Byara"},
+{id:"gov_19_area_026",name:"بیارەی نوێ",nameEn:"Byarai Nwe"},
+{id:"gov_19_area_027",name:"تەوێڵە",nameEn:"Tawella"},
+{id:"gov_19_area_028",name:"بامۆ",nameEn:"Bamo"},
+{id:"gov_19_area_029",name:"شێخان",nameEn:"Shexan"},
+{id:"gov_19_area_030",name:"شەمەران",nameEn:"Shameran"},
+{id:"gov_19_area_031",name:"سەرگەڵەت",nameEn:"Sargalat"},
+{id:"gov_19_area_032",name:"گولپ",nameEn:"Gulp"},
+{id:"gov_19_area_033",name:"هاوار",nameEn:"Hawar"},
+{id:"gov_19_area_034",name:"گریانە",nameEn:"Griana"},
+{id:"gov_19_area_035",name:"پاڵانیان",nameEn:"Palaniyan"},
+{id:"gov_19_area_036",name:"سۆسەکان",nameEn:"Soskakan"},
+{id:"gov_19_area_037",name:"نارنجەڵە",nameEn:"Naranjala"},
+{id:"gov_19_area_038",name:"دەربەندیخان",nameEn:"Darbandikhan"},
+{id:"gov_19_area_039",name:"شارباژێر",nameEn:"Sharbazher"},
+{id:"gov_19_area_040",name:"قەڵادزێ",nameEn:"Qaladiza"}
+]}
+];
+
+/* =====================================================
+   GOVERNORATES
+===================================================== */
+function loadGovernorates() {
+  const select = $("governorate");
+  IRAQ_LOCATIONS.forEach(g => {
+    const option = document.createElement("option");
+    option.value = g.id;
+    option.textContent = g.name;
+    select.appendChild(option);
+  });
+}
+
+$("governorate").addEventListener("change", () => {
+  hideAlert();
+  const gid = $("governorate").value;
+  const area = $("area");
+  area.innerHTML = "";
+  $("locationNote").textContent = "";
+
+  if (!gid) {
+    area.disabled = true;
+    area.innerHTML = `<option value="">اختر المحافظة أولًا</option>`;
+    return;
+  }
+
+  const gov = IRAQ_LOCATIONS.find(g => g.id === gid);
+  if (!gov) return;
+
+  area.disabled = false;
+  area.innerHTML = `<option value="">اختر المنطقة</option>`;
+
+  gov.areas.forEach(a => {
+    const option = document.createElement("option");
+    option.value = a.id;
+    option.textContent = a.name + " — " + a.nameEn;
+    area.appendChild(option);
+  });
+});
+
+$("area").addEventListener("change", () => {
+  const gid = $("governorate").value;
+  const aid = $("area").value;
+  const gov = IRAQ_LOCATIONS.find(g => g.id === gid);
+  const ar = gov?.areas.find(a => a.id === aid);
+
+  $("locationNote").textContent = ar
+    ? "الموقع المحدد: " + gov.name + " (" + gov.nameEn + ") — " + ar.name + " (" + ar.nameEn + ")"
+    : "";
+});
+
+/* =====================================================
+   COUNTER
+===================================================== */
+async function refreshCounter() {
+  try {
+    const { data, error } = await sb.rpc("get_today_count");
+    if (error) throw error;
+    const count = Number(data) || 0;
+    $("counterText").textContent = count + " / " + DAILY_LIMIT;
+    $("counterBar").style.width = Math.min(100, count / DAILY_LIMIT * 100) + "%";
+  } catch (error) {
+    console.error(error);
+    $("counterText").textContent = "— / " + DAILY_LIMIT;
+  }
+}
+
+/* =====================================================
+   IMAGE
+===================================================== */
+let processedBlob = null;
+let processedExt = "webp";
+let previewObjectUrl = null;
+
+$("imgPicker").addEventListener("click", () => {
+  $("imgInput").click();
+});
+
+$("imgInput").addEventListener("change", async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type.toLowerCase())) {
+    showAlert("نوع الصورة غير مدعوم. استخدم JPG أو PNG أو WebP.");
+    $("imgInput").value = "";
+    return;
+  }
+  if (file.size > MAX_SIZE) {
+    showAlert("حجم الصورة أكبر من 5 ميجابايت. اختر صورة أصغر.");
+    $("imgInput").value = "";
+    return;
+  }
+  hideAlert();
+
+  try {
+    const result = await compressImage(file);
+    processedBlob = result.blob;
+    processedExt = result.ext;
+    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = result.previewUrl;
+    $("previewImg").src = result.previewUrl;
+    $("preview").style.display = "block";
+    $("imgPicker").style.display = "none";
+    $("imgInfo").textContent = "الحجم النهائي: " + Math.round(result.blob.size / 1024) + " KB (" + result.ext + ")";
+  } catch (error) {
+    console.error(error);
+    processedBlob = file;
+    processedExt = file.type.includes("png") ? "png" : "jpg";
+    if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = URL.createObjectURL(file);
+    $("previewImg").src = previewObjectUrl;
+    $("preview").style.display = "block";
+    $("imgPicker").style.display = "none";
+    $("imgInfo").textContent = "الحجم: " + Math.round(file.size / 1024) + " KB";
+  }
+});
+
+$("removeImg").addEventListener("click", () => {
+  processedBlob = null;
+  processedExt = "webp";
+  if (previewObjectUrl) { URL.revokeObjectURL(previewObjectUrl); previewObjectUrl = null; }
+  $("imgInput").value = "";
+  $("previewImg").src = "";
+  $("preview").style.display = "none";
+  $("imgPicker").style.display = "block";
+  $("imgInfo").textContent = "";
+});
+
+async function compressImage(file) {
+  const bitmap = await createImageBitmap(file);
+  let width = bitmap.width;
+  let height = bitmap.height;
+
+  if (width > MAX_DIM || height > MAX_DIM) {
+    const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  let blob = await new Promise(resolve => {
+    canvas.toBlob(resolve, "image/webp", IMAGE_QUALITY);
+  });
+  let ext = "webp";
+
+  if (!blob) {
+    blob = await new Promise(resolve => {
+      canvas.toBlob(resolve, "image/jpeg", IMAGE_QUALITY);
+    });
+    ext = "jpg";
+  }
+  if (!blob) throw new Error("Image encoding failed");
+
+  try { bitmap.close && bitmap.close(); } catch {}
+
+  return { blob, ext, previewUrl: URL.createObjectURL(blob) };
+}
+
+/* =====================================================
+   DESCRIPTION COUNTER
+===================================================== */
+$("description").addEventListener("input", e => {
+  $("descCount").textContent = e.target.value.length;
+});
+
+/* =====================================================
+   RANDOM FILE NAME
+===================================================== */
+function randomId() {
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function todayBaghdad() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Baghdad" }).format(new Date());
+}
+
+/* =====================================================
+   ERROR TRANSLATION
+===================================================== */
+function translateError(error) {
+  const message = error?.message || "";
+  if (message.includes("DAILY_LIMIT_REACHED")) return "اكتمل الحد اليومي 1251 إعلانًا. حاول غدًا.";
+  if (message.includes("INVALID_IMAGE_URL")) return "رابط الصورة غير صالح.";
+  if (message.includes("INVALID_IMAGE_PATH")) return "مسار الصورة غير صالح.";
+  if (message.includes("INVALID_DESCRIPTION")) return "وصف الإعلان غير صالح.";
+  if (message.includes("INVALID_LINK")) return "الرابط غير صالح.";
+  if (message.includes("INVALID_EMAIL")) return "البريد الإلكتروني غير صالح.";
+  if (message.includes("INVALID_LOCATION")) return "المحافظة أو المنطقة غير صحيحة.";
+  if (message.includes("permission denied")) return "تم رفض العملية بسبب صلاحيات الحماية.";
+  return "حدث خطأ أثناء إرسال الإعلان:\n" + message;
+}
+
+/* =====================================================
+   SUBMIT
+===================================================== */
+$("adForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  hideAlert();
+
+  if (!processedBlob) {
+    showAlert("الرجاء اختيار صورة الإعلان.");
+    return;
+  }
+
+  const description = $("description").value.trim();
+  if (description.length < 3) {
+    showAlert("الوصف قصير جدًا. اكتب وصفًا واضحًا للإعلان.");
+    return;
+  }
+
+  const link = $("link").value.trim();
+  try {
+    const parsed = new URL(link);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error();
+  } catch {
+    showAlert("الرابط غير صالح. مثال: https://example.com");
+    return;
+  }
+
+  const email = $("email").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    showAlert("البريد الإلكتروني غير صالح.");
+    return;
+  }
+
+  const govId = $("governorate").value;
+  const areaId = $("area").value;
+
+  if (!govId) { showAlert("اختر المحافظة."); return; }
+  if (!areaId) { showAlert("اختر المنطقة."); return; }
+
+  const gov = IRAQ_LOCATIONS.find(g => g.id === govId);
+  const area = gov?.areas.find(a => a.id === areaId);
+
+  if (!gov || !area) {
+    showAlert("بيانات الموقع غير صحيحة.");
+    return;
+  }
+
+  const button = $("submitBtn");
+  button.disabled = true;
+  button.textContent = "جاري إرسال الإعلان...";
+
+  try {
+    /* 1. رفع الصورة */
+    const fileName = "ads/" + todayBaghdad() + "/" + randomId() + "." + processedExt;
+    showAlert("جاري رفع الصورة وحفظ الإعلان...", "info");
+
+    const upload = await sb.storage
+      .from("ad-images")
+      .upload(fileName, processedBlob, {
+        cacheControl: "31536000",
+        upsert: false,
+        contentType: processedBlob.type || "image/webp"
+      });
+
+    if (upload.error) throw new Error("STORAGE: " + upload.error.message);
+
+    /* 2. الرابط العام */
+    const publicResult = sb.storage.from("ad-images").getPublicUrl(fileName);
+    const publicUrl = publicResult?.data?.publicUrl;
+    if (!publicUrl) throw new Error("STORAGE: PUBLIC URL ERROR");
+
+    /* 3. submit_ad */
+    const result = await sb.rpc("submit_ad", {
+      p_image_url: publicUrl,
+      p_image_path: fileName,
+      p_description: description,
+      p_link: link,
+      p_email: email,
+      p_gov_id: gov.id,
+      p_gov_name: gov.name,
+      p_area_id: area.id,
+      p_area_name: area.name
+    });
+
+    if (result.error) {
+      /* حذف الصورة إذا فشل حفظ الإعلان */
+      try { await sb.storage.from("ad-images").remove([fileName]); } catch {}
+      throw result.error;
+    }
+
+    /* SUCCESS */
+    showAlert("✅ تم إرسال إعلانك بنجاح، وسيتم مراجعته قريبًا.", "success");
+    $("adForm").reset();
+    $("area").innerHTML = `<option value="">اختر المحافظة أولًا</option>`;
+    $("area").disabled = true;
+    $("removeImg").click();
+    $("descCount").textContent = "0";
+    $("locationNote").textContent = "";
+    await refreshCounter();
+
+  } catch (error) {
+    console.error(error);
+    showAlert(translateError(error), "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "إرسال الإعلان";
+  }
+});
+
+/* =====================================================
+   START
+===================================================== */
+loadGovernorates();
+refreshCounter();
+</script>
+</body>
+</html>
