@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>elaalwa — أرسل إعلانك</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- تم تحميل مكتبة Supabase بشكل غير معطل للصفحة -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <style>
 :root{--black:#111;--orange:#f97316;--bg:#fafafa;--white:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;--red:#dc2626;--green:#16a34a}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -13,7 +14,9 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:20px 16px;t
 .logo{font-size:30px;font-weight:900}
 .logo .ela{color:#111}
 .logo .alwa{color:#f97316}
-.container{max-width:640px;margin:auto;padding:16px}
+
+/* إزالة الفراغ المحيطي وتوسيع المحتوى ليتناسب مع جميع الأجهزة */
+.container{width:100%;max-width:100%;margin:auto;padding:16px;transition:max-width 0.3s ease}
 .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:16px}
 .counter{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:7px}
 .bar{height:8px;background:#f3f4f6;border-radius:99px;overflow:hidden;margin-bottom:18px}
@@ -44,8 +47,21 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:#f97316;box-sh
 .alert.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
 .alert.success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
 .alert.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
-.footer-note{max-width:640px;margin:0 auto 14px;color:#374151;font-size:13px;line-height:1.8;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+
+/* تنسيق التذييل ليمتد بشكل جميل */
+.footer-note{width:100%;max-width:100%;margin:0 auto 14px;color:#374151;font-size:13px;line-height:1.8;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:16px}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+
+/* تحسين المظهر للشاشات الكبيرة (لابتوب / تابلت) */
+@media (min-width: 768px) {
+  .container { max-width: 800px; }
+  .footer-note { max-width: 800px; border-radius: 14px; border: 1px solid var(--border); }
+  .card { padding: 24px; }
+}
+@media (min-width: 1200px) {
+  .container { max-width: 1000px; }
+  .footer-note { max-width: 1000px; }
+}
 </style>
 </head>
 <body>
@@ -133,19 +149,32 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
 </div>
 
 <footer>
-  <p class="footer-note">
-    حدد المحافظة والمنطقة، ليصل الإعلان إلى المستخدمين المتواجدين في نفس النطاق الجغرافي.
-  </p>
-  <div>© elaalwa — جميع الحقوق محفوظة <span id="year"></span></div>
+  <!-- تم استبدال الوصف المختصر بالوصف الجديد الكامل -->
+  <div class="footer-note">
+    <p style="font-weight: 900; font-size: 16px; color: #111; margin-bottom: 8px;">ela</p>
+    <p>منصة إعلانية لإدارة وعرض المحتوى المحلي وفق الموقع الجغرافي للمستخدم. يتم تحديد المحافظة والمنطقة المستهدفة، وربط كل إعلان بالمنطقة الجغرافية المحددة ليظهر للمستخدمين المتواجدين فيها.</p>
+    <br>
+    <p>يعتمد النظام تخصيص إعلان واحد لكل منطقة لمدة 24 ساعة، ولا يتم خلال هذه المدة عرض إعلان آخر للمنطقة نفسها. وعند انتهاء مدة الـ24 ساعة، ينتهي عرض الإعلان وتصبح المنطقة متاحة لإضافة إعلان جديد.</p>
+    <br>
+    <p>وبهذه الآلية، يتم تنظيم الإعلانات وفق المحافظة والمنطقة والفترة الزمنية المحددة، مع اعتماد الموقع الجغرافي للمستخدم كعامل أساسي في تحديد الإعلان الذي يظهر له داخل التطبيق.</p>
+  </div>
+  <div style="margin-top: 15px;">© elaalwa — جميع الحقوق محفوظة <span id="year"></span></div>
 </footer>
 
 <script>
 /* =====================================================
-   SUPABASE
+   SUPABASE & PERFORMANCE OPTIMIZATION
 ===================================================== */
 const SUPABASE_URL = "https://snndcnrtekegddlnvxea.supabase.co";
 const SUPABASE_KEY = "sb_publishable_i-Ti6b19e0wT-KoVW5a7nw_R7jNG0sm";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sb = null; // سيتم تهيئته لاحقاً في الخلفية
+
+function initSupabase() {
+  if (window.supabase) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    refreshCounter(); // تحديث العداد بعد الاتصال
+  }
+}
 
 /* =====================================================
    SETTINGS
@@ -1542,6 +1571,7 @@ $("area").addEventListener("change", () => {
    COUNTER
 ===================================================== */
 async function refreshCounter() {
+  if (!sb) return; // تأكد من أن الاتصال جاهز
   try {
     const { data, error } = await sb.rpc("get_today_count");
     if (error) throw error;
@@ -1694,6 +1724,11 @@ $("adForm").addEventListener("submit", async e => {
   e.preventDefault();
   hideAlert();
 
+  if (!sb) {
+    showAlert("جاري الاتصال بقاعدة البيانات، يرجى المحاولة بعد لحظات...");
+    return;
+  }
+
   if (!processedBlob) {
     showAlert("الرجاء اختيار صورة الإعلان.");
     return;
@@ -1797,10 +1832,17 @@ $("adForm").addEventListener("submit", async e => {
 });
 
 /* =====================================================
-   START
+   START (PERFORMANCE OPTIMIZED)
 ===================================================== */
-loadGovernorates();
-refreshCounter();
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. تحميل البيانات المحلية فوراً (سريع جداً)
+  loadGovernorates();
+  
+  // 2. تأخير تهيئة Supabase والاتصال بقاعدة البيانات لثانية واحدة أو حتى ينتهي المتصفح من الرسم
+  setTimeout(() => {
+    initSupabase();
+  }, 100); // 100 مللي ثانية تكفي لعرض الواجهة للمستخدم قبل بدء العمليات في الخلفية
+});
 </script>
 </body>
 </html>
