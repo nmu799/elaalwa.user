@@ -3,9 +3,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>elaalwa — أرسل إعلانك</title>
-<!-- تم تحميل مكتبة Supabase بشكل غير معطل للصفحة -->
+
+<!-- ==================== تحسينات محركات البحث (SEO) ==================== -->
+<title>elaalwa | إعلانات محلية حصرية لمدة 24 ساعة في العراق</title>
+<meta name="description" content="منصة elaalwa تتيح لك حجز إعلان حصري في منطقتك لمدة 24 ساعة. ارفع صورة إعلانك، اكتب وصفاً قصيراً، أضف رابط صفحتك، وحدد محافظتك ومنطقتك. إعلان واحد فقط لكل منطقة.">
+<meta name="keywords" content="إعلانات العراق, إعلانات بغداد, إعلانات البصرة, تسويق إلكتروني العراق, إعلانات محلية, إعلانات مجانية, elaalwa">
+<meta name="robots" content="index, follow">
+<meta name="author" content="elaalwa">
+<link rel="canonical" href="https://elaalwa.com/">
+
+<!-- ==================== وسوم المشاركة على وسائل التواصل ==================== -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://elaalwa.com/">
+<meta property="og:title" content="elaalwa | إعلانات محلية حصرية في العراق">
+<meta property="og:description" content="احجز إعلانك الحصري في منطقتك لمدة 24 ساعة. ارفع صورة إعلانك، اكتب وصفاً قصيراً، أضف رابط صفحتك، وحدد محافظتك ومنطقتك.">
+<meta property="og:image" content="https://elaalwa.com/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="elaalwa | إعلانات محلية حصرية في العراق">
+<meta name="twitter:description" content="احجز إعلانك الحصري في منطقتك لمدة 24 ساعة. ارفع صورة إعلانك، اكتب وصفاً قصيراً، أضف رابط صفحتك، وحدد محافظتك ومنطقتك.">
+
+<!-- ==================== بيانات منظمة لجوجل (Schema - WebSite) ==================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "elaalwa",
+  "url": "https://elaalwa.com/",
+  "description": "منصة إعلانية محلية في العراق لعرض وإدارة الإعلانات حسب المحافظة والمنطقة.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://elaalwa.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<!-- ==================== بيانات منظمة لجوجل (Schema - FAQ) ==================== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "كيف أرسل إعلاناً في منصة elaalwa؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "لإرسال إعلانك في منصة elaalwa، اتبع هذه الخطوات بالترتيب: 1) ارفع صورة الإعلان ويجب أن تكون جذابة وواضحة. 2) اكتب وصفاً قصيراً للإعلان يظهر تحت الصورة. 3) أضف رابط الصفحة التي تعلن عنها. 4) أدخل بريدك الإلكتروني Gmail لكي نتواصل معك. 5) حدد المحافظة المستهدفة. 6) حدد المنطقة المستهدفة بالتفصيل."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "ما هي الحقول المطلوبة لإرسال الإعلان؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "يتطلب النموذج ستة حقول بالترتيب: صورة الإعلان (JPG/PNG/WebP حتى 5 ميجابايت)، وصف الإعلان (حتى 2000 حرف)، رابط الصفحة المعلن عنها، البريد الإلكتروني Gmail للتواصل، اختيار المحافظة من قائمة 19 محافظة عراقية، ثم اختيار المنطقة من القائمة التابعة للمحافظة."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "كم تستمر مدة عرض الإعلان؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "تستمر مدة عرض الإعلان 24 ساعة فقط. خلال هذه الفترة، لا يتم عرض أي إعلان آخر في نفس المنطقة. بعد انتهاء الـ 24 ساعة، تصبح المنطقة متاحة لإعلان جديد."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "كيف يتم تحديد الإعلان الذي يظهر للمستخدم؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "يتم تحديد الإعلان بناءً على الموقع الجغرافي للمستخدم (المحافظة والمنطقة). يظهر للمستخدم الإعلان النشط حالياً في منطقته فقط، بنظام إعلان واحد لكل منطقة."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- ==================== مكتبة Supabase ==================== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
 <style>
 :root{--black:#111;--orange:#f97316;--bg:#fafafa;--white:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;--red:#dc2626;--green:#16a34a}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -70,7 +147,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
   <div class="logo"><span class="ela">ela</span><span class="alwa">alwa</span></div>
 </header>
 
-<div class="container">
+<main class="container">
 
   <div class="card">
     <div class="counter">
@@ -81,62 +158,64 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
   </div>
 
   <div class="card">
-    <h1>أرسل إعلانك</h1>
+    <h1>أرسل إعلانك في منصة إعلانات العراق</h1>
     <p class="sub">املأ البيانات التالية وسيتم مراجعة إعلانك قبل النشر.</p>
 
     <div id="alert" class="alert"></div>
 
     <form id="adForm" novalidate>
 
-      <!-- الصورة -->
+      <!-- 1. الصورة -->
       <div class="field">
-        <label>صورة الإعلان <span class="req">*</span></label>
+        <label>1. صورة الإعلان <span class="req">*</span></label>
         <div class="img-picker" id="imgPicker">
           <div class="icon">🖼️</div>
-          <div class="title">اضغط لاختيار صورة</div>
+          <div class="title">اضغط لاختيار صورة جذابة</div>
           <div class="small">JPG / PNG / WebP — حتى 5 ميجابايت</div>
         </div>
         <input type="file" id="imgInput" accept="image/jpeg,image/png,image/webp" hidden>
         <div class="preview" id="preview">
-          <img id="previewImg" alt="معاينة">
+          <img id="previewImg" alt="معاينة صورة الإعلان">
           <button type="button" class="remove" id="removeImg" aria-label="حذف الصورة">×</button>
         </div>
         <div class="hint" id="imgInfo"></div>
       </div>
 
-      <!-- الوصف -->
+      <!-- 2. الوصف -->
       <div class="field">
-        <label for="description">وصف الإعلان <span class="req">*</span></label>
-        <textarea id="description" maxlength="2000" placeholder="اكتب وصفًا واضحًا للإعلان..." required></textarea>
+        <label for="description">2. وصف الإعلان <span class="req">*</span></label>
+        <textarea id="description" maxlength="2000" placeholder="اكتب وصفاً قصيراً وجذاباً سيظهر تحت صورة الإعلان..." required></textarea>
         <div class="hint"><span id="descCount">0</span> / 2000</div>
         <div class="tip">
-          استخدم تصميمًا واضحًا، وقدّم عروضًا وتخفيضات مميزة تشجع المستخدم على اكتشاف ما تقدمه.
+          اجعل الوصف قصيراً وواضحاً، وأبرز أهم ميزة أو عرض في إعلانك.
         </div>
       </div>
 
-      <!-- الرابط -->
+      <!-- 3. الرابط -->
       <div class="field">
-        <label for="link">الرابط <span class="req">*</span></label>
+        <label for="link">3. رابط الصفحة المعلن عنها <span class="req">*</span></label>
         <input type="url" id="link" placeholder="https://example.com" required>
+        <div class="hint">الرابط الذي سينتقل إليه المستخدم عند الضغط على إعلانك.</div>
       </div>
 
-      <!-- البريد -->
+      <!-- 4. البريد -->
       <div class="field">
-        <label for="email">Gmail للتواصل <span class="req">*</span></label>
+        <label for="email">4. Gmail للتواصل <span class="req">*</span></label>
         <input type="email" id="email" placeholder="example@gmail.com" required>
+        <div class="hint">سنستخدم هذا البريد للتواصل معك بخصوص إعلانك.</div>
       </div>
 
-      <!-- المحافظة -->
+      <!-- 5. المحافظة -->
       <div class="field">
-        <label for="governorate">المحافظة <span class="req">*</span></label>
+        <label for="governorate">5. المحافظة <span class="req">*</span></label>
         <select id="governorate" required>
           <option value="">اختر المحافظة</option>
         </select>
       </div>
 
-      <!-- المنطقة -->
+      <!-- 6. المنطقة -->
       <div class="field">
-        <label for="area">المنطقة <span class="req">*</span></label>
+        <label for="area">6. المنطقة <span class="req">*</span></label>
         <select id="area" required disabled>
           <option value="">اختر المحافظة أولًا</option>
         </select>
@@ -146,10 +225,45 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
       <button type="submit" class="primary" id="submitBtn">إرسال الإعلان</button>
     </form>
   </div>
-</div>
+
+  <!-- قسم يشرح كيفية عمل المنصة (بالترتيب الفعلي) -->
+  <div class="card" style="margin-top: 24px;">
+    <h2 style="font-size: 19px; margin-bottom: 12px; color: #111;">كيف تعمل منصة elaalwa؟</h2>
+    <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">أرسل إعلانك في 6 خطوات بسيطة:</p>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+        <div><strong>ارفع صورة إعلانك:</strong> اختر صورة جذابة وواضحة (JPG / PNG / WebP).</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+        <div><strong>اكتب وصفاً قصيراً:</strong> سيظهر وصفك تحت صورة الإعلان مباشرة.</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+        <div><strong>أضف رابط صفحتك:</strong> الرابط الذي سينتقل إليه المستخدم عند الضغط على إعلانك.</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
+        <div><strong>أدخل Gmail للتواصل:</strong> لكي نتمكن من التواصل معك بخصوص الإعلان.</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">5</div>
+        <div><strong>حدد المحافظة:</strong> اختر المحافظة المستهدفة من قائمة 19 محافظة عراقية.</div>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: flex-start;">
+        <div style="background: #f97316; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">6</div>
+        <div><strong>حدد المنطقة:</strong> اختر المنطقة بدقة. يظهر إعلانك حصرياً هناك لمدة <strong>24 ساعة كاملة</strong>.</div>
+      </div>
+    </div>
+    <p style="margin-top: 14px; font-size: 12px; color: #6b7280; background: #f9fafb; padding: 8px 10px; border-radius: 8px;">
+      * ملاحظة: يتم تطبيق نظام "إعلان واحد لكل منطقة" لضمان أعلى نسبة مشاهدة وتركيز لجمهورك المستهدف.
+    </p>
+  </div>
+
+</main>
 
 <footer>
-  <!-- تم استبدال الوصف المختصر بالوصف الجديد الكامل -->
   <div class="footer-note">
     <p style="font-weight: 900; font-size: 16px; color: #111; margin-bottom: 8px;">ela</p>
     <p>منصة إعلانية لإدارة وعرض المحتوى المحلي وفق الموقع الجغرافي للمستخدم. يتم تحديد المحافظة والمنطقة المستهدفة، وربط كل إعلان بالمنطقة الجغرافية المحددة ليظهر للمستخدمين المتواجدين فيها.</p>
@@ -167,12 +281,12 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
 ===================================================== */
 const SUPABASE_URL = "https://snndcnrtekegddlnvxea.supabase.co";
 const SUPABASE_KEY = "sb_publishable_i-Ti6b19e0wT-KoVW5a7nw_R7jNG0sm";
-let sb = null; // سيتم تهيئته لاحقاً في الخلفية
+let sb = null; 
 
 function initSupabase() {
   if (window.supabase) {
     sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    refreshCounter(); // تحديث العداد بعد الاتصال
+    refreshCounter(); 
   }
 }
 
