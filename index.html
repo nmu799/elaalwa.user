@@ -91,9 +91,24 @@
 :root{--black:#111;--orange:#f97316;--bg:#fafafa;--white:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;--red:#dc2626;--green:#16a34a}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-header{background:#fff;border-bottom:1px solid var(--border);padding:20px 16px;text-align:center;position:sticky;top:0;z-index:10}
-.logo{font-size:30px;font-weight:900}
-.logo .ela{color:#111}
+
+/* ==================== الهيدر مع صورة الخلفية ==================== */
+header{
+  background:url('/header-bg.png') center center / cover no-repeat;
+  background-color:#0a0a0a;
+  border-bottom:1px solid var(--border);
+  padding:20px 16px;
+  text-align:center;
+  position:sticky;
+  top:0;
+  z-index:10;
+  min-height:100px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.logo{font-size:30px;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,0.6)}
+.logo .ela{color:#fff}
 .logo .alwa{color:#f97316}
 
 /* إزالة الفراغ المحيطي وتوسيع المحتوى ليتناسب مع جميع الأجهزة */
@@ -1689,7 +1704,7 @@ $("area").addEventListener("change", () => {
    COUNTER
 ===================================================== */
 async function refreshCounter() {
-  if (!sb) return; // تأكد من أن الاتصال جاهز
+  if (!sb) return;
   try {
     const { data, error } = await sb.rpc("get_today_count");
     if (error) throw error;
@@ -1892,7 +1907,6 @@ $("adForm").addEventListener("submit", async e => {
   button.textContent = "جاري إرسال الإعلان...";
 
   try {
-    /* 1. رفع الصورة */
     const fileName = "ads/" + todayBaghdad() + "/" + randomId() + "." + processedExt;
     showAlert("جاري رفع الصورة وحفظ الإعلان...", "info");
 
@@ -1906,12 +1920,10 @@ $("adForm").addEventListener("submit", async e => {
 
     if (upload.error) throw new Error("STORAGE: " + upload.error.message);
 
-    /* 2. الرابط العام */
     const publicResult = sb.storage.from("ad-images").getPublicUrl(fileName);
     const publicUrl = publicResult?.data?.publicUrl;
     if (!publicUrl) throw new Error("STORAGE: PUBLIC URL ERROR");
 
-    /* 3. submit_ad */
     const result = await sb.rpc("submit_ad", {
       p_image_url: publicUrl,
       p_image_path: fileName,
@@ -1925,12 +1937,10 @@ $("adForm").addEventListener("submit", async e => {
     });
 
     if (result.error) {
-      /* حذف الصورة إذا فشل حفظ الإعلان */
       try { await sb.storage.from("ad-images").remove([fileName]); } catch {}
       throw result.error;
     }
 
-    /* SUCCESS */
     showAlert("✅ تم إرسال إعلانك بنجاح، وسيتم مراجعته قريبًا.", "success");
     $("adForm").reset();
     $("area").innerHTML = `<option value="">اختر المحافظة أولًا</option>`;
@@ -1950,16 +1960,13 @@ $("adForm").addEventListener("submit", async e => {
 });
 
 /* =====================================================
-   START (PERFORMANCE OPTIMIZED)
+   START
 ===================================================== */
 document.addEventListener("DOMContentLoaded", () => {
-  // 1. تحميل البيانات المحلية فوراً (سريع جداً)
   loadGovernorates();
-  
-  // 2. تأخير تهيئة Supabase والاتصال بقاعدة البيانات لثانية واحدة أو حتى ينتهي المتصفح من الرسم
   setTimeout(() => {
     initSupabase();
-  }, 100); // 100 مللي ثانية تكفي لعرض الواجهة للمستخدم قبل بدء العمليات في الخلفية
+  }, 100);
 });
 </script>
 </body>
