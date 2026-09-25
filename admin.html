@@ -9,6 +9,20 @@
 
 <style>
 /* =================================
+   الألوان الأساسية
+   Green 60%  : #04722b
+   Orange 25% : #ff6600
+   Yellow 15% : #f1c548
+================================= */
+:root{
+  --green:#04722b;
+  --orange:#ff6600;
+  --yellow:#f1c548;
+  --green-dark:#035a22;
+  --orange-dark:#d95800;
+}
+
+/* =================================
    1) الأساسيات
 ================================= */
 *{box-sizing:border-box}
@@ -33,6 +47,12 @@ input{
   border-radius:10px;
   font-size:16px;
   outline:none;
+  transition:border-color .2s, box-shadow .2s;
+}
+
+input:focus{
+  border-color:var(--green);
+  box-shadow:0 0 0 3px rgba(4,114,43,.12);
 }
 
 button{
@@ -41,7 +61,12 @@ button{
   padding:12px 16px;
   font-size:15px;
   cursor:pointer;
+  font-weight:bold;
+  transition:transform .15s, opacity .15s, background .15s;
 }
+
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
 
 button:disabled{
   opacity:.6;
@@ -66,6 +91,7 @@ button:disabled{
   padding:28px;
   border-radius:18px;
   box-shadow:0 8px 30px rgba(0,0,0,.08);
+  border-top:5px solid var(--green);
 }
 
 .logo{
@@ -75,19 +101,19 @@ button:disabled{
   margin-bottom:8px;
 }
 
-.logo-ela{color:#000}
-.logo-alwa{color:#e67e22}
+.logo-ela{color:var(--green)}
+.logo-alwa{color:var(--orange)}
 
 .blessing{
   text-align:center;
-  color:#1597d4;
+  color:var(--green);
   font-size:15px;
   font-weight:bold;
   margin-bottom:18px;
   padding:8px 10px;
   border-radius:10px;
-  background:#f0f8fc;
-  border:1px solid #d6ecf6;
+  background:#fff8e1;
+  border:1px solid var(--yellow);
 }
 
 .subtitle{
@@ -98,16 +124,19 @@ button:disabled{
 
 .loginBtn{
   width:100%;
-  background:#1597d4;
+  background:var(--green);
   color:white;
   font-weight:bold;
 }
 
+.loginBtn:hover:not(:disabled){background:var(--green-dark)}
+
 #error{
   margin-top:15px;
   text-align:center;
-  color:#d33;
+  color:var(--orange);
   line-height:1.7;
+  font-weight:bold;
 }
 
 /* =================================
@@ -128,11 +157,13 @@ button:disabled{
   align-items:center;
   gap:10px;
   flex-wrap:wrap;
+  border-right:5px solid var(--green);
 }
 
 .header h1{
   margin:0 0 5px;
   font-size:23px;
+  color:var(--green);
 }
 
 .email{
@@ -140,13 +171,27 @@ button:disabled{
   color:#777;
 }
 
-.refresh{
-  background:#1597d4;
-  color:white;
+.header .btns{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
 }
 
+.refresh{
+  background:var(--green);
+  color:white;
+}
+.refresh:hover:not(:disabled){background:var(--green-dark)}
+
+.deleteAll{
+  background:var(--orange);
+  color:white;
+}
+.deleteAll:hover:not(:disabled){background:var(--orange-dark)}
+
 .logout{
-  background:#eee;
+  background:var(--yellow);
+  color:#333;
 }
 
 /* العدد */
@@ -155,11 +200,22 @@ button:disabled{
   padding:18px;
   border-radius:16px;
   margin-bottom:15px;
+  border-right:5px solid var(--yellow);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
 }
 
 .count strong{
   font-size:25px;
-  color:#1597d4;
+  color:var(--green);
+}
+
+.count .label{
+  color:#555;
+  font-size:15px;
 }
 
 /* =================================
@@ -171,6 +227,7 @@ button:disabled{
   margin-bottom:20px;
   overflow:hidden;
   box-shadow:0 5px 20px rgba(0,0,0,.06);
+  border-top:4px solid var(--green);
 }
 
 .card img{
@@ -193,7 +250,7 @@ button:disabled{
 }
 
 .row b{
-  color:#555;
+  color:var(--green);
 }
 
 /* الأزرار */
@@ -208,10 +265,13 @@ button:disabled{
   flex:1;
 }
 
-.view{background:#eee}
-.download{background:#1597d4;color:white}
-.copy{background:#222;color:white}
-.delete{background:#d33;color:white}
+.view{background:var(--yellow);color:#333}
+.download{background:var(--green);color:white}
+.download:hover:not(:disabled){background:var(--green-dark)}
+.copy{background:var(--green);color:white}
+.copy:hover:not(:disabled){background:var(--green-dark)}
+.delete{background:var(--orange);color:white}
+.delete:hover:not(:disabled){background:var(--orange-dark)}
 
 /* الحالات */
 .empty{
@@ -220,12 +280,14 @@ button:disabled{
   border-radius:16px;
   text-align:center;
   color:#777;
+  border-right:5px solid var(--yellow);
 }
 
 .loading{
   text-align:center;
   padding:40px;
-  color:#777;
+  color:var(--green);
+  font-weight:bold;
 }
 
 /* =================================
@@ -234,6 +296,8 @@ button:disabled{
 @media(max-width:600px){
   .actions button{flex:1 1 100%}
   .header button{margin-top:5px}
+  .header .btns{width:100%}
+  .header .btns button{flex:1}
 }
 </style>
 </head>
@@ -283,14 +347,16 @@ button:disabled{
         <div class="email" id="adminEmail"></div>
       </div>
 
-      <div>
+      <div class="btns">
         <button class="refresh" onclick="loadAds()">🔄 تحديث</button>
+        <button class="deleteAll" id="deleteAllBtn" onclick="deleteAll()">🗑️ حذف الكل</button>
         <button class="logout" onclick="logout()">خروج</button>
       </div>
     </div>
 
     <div class="count">
-      عدد الطلبات: <strong id="count">0</strong>
+      <span class="label">عدد الطلبات:</span>
+      <strong id="count">0</strong>
     </div>
 
     <div id="ads">
@@ -360,6 +426,7 @@ const errorBox      = document.getElementById("error");
 const loginBtn      = document.getElementById("loginBtn");
 const emailInput    = document.getElementById("email");
 const passwordInput = document.getElementById("password");
+const deleteAllBtn  = document.getElementById("deleteAllBtn");
 
 
 /* =================================
@@ -806,7 +873,82 @@ async function deleteAd(ad){
 
 
 /* =================================
-   15) اختصارات لوحة المفاتيح
+   15) حذف الكل
+================================= */
+async function deleteAll(){
+  const firstConfirm = confirm(
+    "⚠️ هل تريد حذف جميع الطلبات؟\n\n" +
+    "سيتم حذف كل الطلبات وجميع الصور نهائياً."
+  );
+  if(!firstConfirm) return;
+
+  const secondConfirm = confirm(
+    "تأكيد أخير:\n\n" +
+    "هل أنت متأكد تماماً من حذف كل الطلبات؟\n" +
+    "لا يمكن التراجع عن هذه العملية."
+  );
+  if(!secondConfirm) return;
+
+  deleteAllBtn.disabled = true;
+  const originalText = deleteAllBtn.textContent;
+  deleteAllBtn.textContent = "جاري الحذف...";
+
+  try{
+    /* 1) جلب جميع الطلبات لمعرفة مسارات الصور */
+    const { data: ads, error: fetchError } = await sb
+      .from("ads")
+      .select("id, image_path");
+
+    if(fetchError){
+      throw new Error("فشل جلب الطلبات: " + fetchError.message);
+    }
+
+    const list = ads || [];
+    const paths = list
+      .map(function(a){ return a.image_path; })
+      .filter(function(p){ return !!p; });
+
+    /* 2) حذف الصور من التخزين (على دفعات) */
+    if(paths.length > 0){
+      const CHUNK = 100;
+      for(let i = 0; i < paths.length; i += CHUNK){
+        const chunk = paths.slice(i, i + CHUNK);
+        const { error: storageError } = await sb
+          .storage
+          .from("ad-images")
+          .remove(chunk);
+
+        if(storageError){
+          console.error("STORAGE DELETE ERROR:", storageError);
+        }
+      }
+    }
+
+    /* 3) حذف جميع الصفوف من الجدول */
+    const { error: deleteError } = await sb
+      .from("ads")
+      .delete()
+      .not("id", "is", null);
+
+    if(deleteError){
+      throw new Error("فشل حذف الطلبات: " + deleteError.message);
+    }
+
+    alert("تم حذف جميع الطلبات ✅");
+    await loadAds();
+
+  }catch(error){
+    console.error("DELETE ALL ERROR:", error);
+    alert("فشل حذف جميع الطلبات:\n" + (error.message || error));
+  }finally{
+    deleteAllBtn.disabled = false;
+    deleteAllBtn.textContent = originalText;
+  }
+}
+
+
+/* =================================
+   16) اختصارات لوحة المفاتيح
 ================================= */
 emailInput.addEventListener("keydown", function(event){
   if(event.key === "Enter"){
@@ -822,7 +964,7 @@ passwordInput.addEventListener("keydown", function(event){
 
 
 /* =================================
-   16) بدء التشغيل
+   17) بدء التشغيل
 ================================= */
 restoreSession();
 </script>
