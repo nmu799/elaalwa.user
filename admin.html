@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>elaalwa - لوحة الإدارة</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* =================================
+   1) الأساسيات
+================================= */
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f3f6f8;
+  color:#222;
+}
+
+.container{
+  width:min(100% - 20px,900px);
+  margin:auto;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  margin-bottom:12px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  font-size:16px;
+  outline:none;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:12px 16px;
+  font-size:15px;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* =================================
+   2) صفحة تسجيل الدخول
+================================= */
+#loginPage{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.loginBox{
+  width:100%;
+  max-width:400px;
+  background:white;
+  padding:28px;
+  border-radius:18px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+}
+
+.logo{
+  text-align:center;
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:8px;
+}
+
+.logo-ela{color:#000}
+.logo-alwa{color:#e67e22}
+
+.blessing{
+  text-align:center;
+  color:#1597d4;
+  font-size:15px;
+  font-weight:bold;
+  margin-bottom:18px;
+  padding:8px 10px;
+  border-radius:10px;
+  background:#f0f8fc;
+  border:1px solid #d6ecf6;
+}
+
+.subtitle{
+  text-align:center;
+  color:#777;
+  margin-bottom:25px;
+}
+
+.loginBtn{
+  width:100%;
+  background:#1597d4;
+  color:white;
+  font-weight:bold;
+}
+
+#error{
+  margin-top:15px;
+  text-align:center;
+  color:#d33;
+  line-height:1.7;
+}
+
+/* =================================
+   3) لوحة الإدارة
+================================= */
+#adminPage{
+  display:none;
+  padding:15px 0 50px;
+}
+
+.header{
+  background:white;
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.header h1{
+  margin:0 0 5px;
+  font-size:23px;
+}
+
+.email{
+  font-size:13px;
+  color:#777;
+}
+
+.refresh{
+  background:#1597d4;
+  color:white;
+}
+
+.logout{
+  background:#eee;
+}
+
+/* العدد */
+.count{
+  background:white;
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:15px;
+}
+
+.count strong{
+  font-size:25px;
+  color:#1597d4;
+}
+
+/* =================================
+   4) بطاقة الطلب
+================================= */
+.card{
+  background:white;
+  border-radius:18px;
+  margin-bottom:20px;
+  overflow:hidden;
+  box-shadow:0 5px 20px rgba(0,0,0,.06);
+}
+
+.card img{
+  width:100%;
+  max-height:450px;
+  object-fit:contain;
+  background:#eee;
+  display:block;
+}
+
+.content{
+  padding:18px;
+}
+
+.row{
+  padding:11px 0;
+  border-bottom:1px solid #eee;
+  line-height:1.7;
+  word-break:break-word;
+}
+
+.row b{
+  color:#555;
+}
+
+/* الأزرار */
+.actions{
+  padding:0 18px 18px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.actions button{
+  flex:1;
+}
+
+.view{background:#eee}
+.download{background:#1597d4;color:white}
+.copy{background:#222;color:white}
+.delete{background:#d33;color:white}
+
+/* الحالات */
+.empty{
+  background:white;
+  padding:40px 20px;
+  border-radius:16px;
+  text-align:center;
+  color:#777;
+}
+
+.loading{
+  text-align:center;
+  padding:40px;
+  color:#777;
+}
+
+/* =================================
+   5) الهاتف
+================================= */
+@media(max-width:600px){
+  .actions button{flex:1 1 100%}
+  .header button{margin-top:5px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- =================================
+     صفحة تسجيل الدخول
+================================= -->
+<div id="loginPage">
+  <div class="loginBox">
+
+    <div class="logo">
+      <span class="logo-ela">ela</span><span class="logo-alwa">alwa</span>
+    </div>
+
+    <div class="blessing">
+      اللهم صل على محمد وآل محمد
+    </div>
+
+    <div class="subtitle">
+      لوحة الإدارة
+    </div>
+
+    <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email">
+    <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+
+    <button id="loginBtn" class="loginBtn" onclick="login()">
+      تسجيل الدخول
+    </button>
+
+    <div id="error"></div>
+
+  </div>
+</div>
+
+
+<!-- =================================
+     لوحة الإدارة
+================================= -->
+<div id="adminPage">
+  <div class="container">
+
+    <div class="header">
+      <div>
+        <h1>لوحة الإدارة</h1>
+        <div class="email" id="adminEmail"></div>
+      </div>
+
+      <div>
+        <button class="refresh" onclick="loadAds()">🔄 تحديث</button>
+        <button class="logout" onclick="logout()">خروج</button>
+      </div>
+    </div>
+
+    <div class="count">
+      عدد الطلبات: <strong id="count">0</strong>
+    </div>
+
+    <div id="ads">
+      <div class="loading">جاري التحميل...</div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* =================================
+   1) إعداد Supabase
+================================= */
+const SUPABASE_URL = "https://snndcnrtekegddlnvxea.supabase.co";
+const SUPABASE_KEY = "sb_publishable_i-Ti6b19e0wT-KoVW5a7nw_R7jNG0sm";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
+/* =================================
+   2) المحافظات
+================================= */
+const GOVERNORATES = {
+  "gov_01":"بغداد",
+  "gov_02":"البصرة",
+  "gov_03":"نينوى",
+  "gov_04":"أربيل",
+  "gov_05":"السليمانية",
+  "gov_06":"دهوك",
+  "gov_07":"كركوك",
+  "gov_08":"الأنبار",
+  "gov_09":"صلاح الدين",
+  "gov_10":"ديالى",
+  "gov_11":"واسط",
+  "gov_12":"بابل",
+  "gov_13":"كربلاء",
+  "gov_14":"النجف",
+  "gov_15":"القادسية",
+  "gov_16":"المثنى",
+  "gov_17":"ذي قار",
+  "gov_18":"ميسان",
+  "gov_19":"حلبجة"
+};
+
+function getGovernorateName(ad){
+  return (
+    ad.governorate_name ||
+    GOVERNORATES[ad.governorate_id] ||
+    ad.governorate ||
+    ad.gov_name ||
+    ""
+  );
+}
+
+function getAreaName(ad){
+  return ad.area_name || ad.area || "";
+}
+
+
+/* =================================
+   3) عناصر الصفحة
+================================= */
+const loginPage     = document.getElementById("loginPage");
+const adminPage     = document.getElementById("adminPage");
+const errorBox      = document.getElementById("error");
+const loginBtn      = document.getElementById("loginBtn");
+const emailInput    = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+
+
+/* =================================
+   4) أدوات مساعدة
+================================= */
+function escapeHtml(value){
+  const div = document.createElement("div");
+  div.textContent = (value === null || value === undefined) ? "" : String(value);
+  return div.innerHTML;
+}
+
+function formatDate(value){
+  if(!value) return "—";
+  try{
+    const date = new Date(value);
+    if(isNaN(date.getTime())) return String(value);
+    return date.toLocaleString("ar-IQ", {
+      dateStyle: "medium",
+      timeStyle: "medium"
+    });
+  }catch(error){
+    return String(value);
+  }
+}
+
+function fallbackCopy(text){
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.top = "-1000px";
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand("copy");
+  area.remove();
+}
+
+
+/* =================================
+   5) التنقل بين الصفحات
+================================= */
+function showAdmin(email){
+  loginPage.style.display = "none";
+  adminPage.style.display = "block";
+  document.getElementById("adminEmail").textContent = email || "";
+}
+
+function showLogin(){
+  adminPage.style.display = "none";
+  loginPage.style.display = "flex";
+  passwordInput.value = "";
+  errorBox.textContent = "";
+}
+
+
+/* =================================
+   6) التحقق من صلاحية الأدمن
+================================= */
+async function checkIsAdmin(){
+  const adminResult = await sb.rpc("is_admin");
+  console.log("ADMIN RESULT:", adminResult);
+
+  if(adminResult.error){
+    throw new Error("حدث خطأ في قراءة صلاحيات الأدمن: " + adminResult.error.message);
+  }
+
+  return adminResult.data === true;
+}
+
+
+/* =================================
+   7) تسجيل الدخول
+================================= */
+async function login(){
+  const email = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if(!email || !password){
+    errorBox.textContent = "أدخل البريد الإلكتروني وكلمة المرور.";
+    return;
+  }
+
+  loginBtn.disabled = true;
+  errorBox.textContent = "جاري تسجيل الدخول...";
+
+  try{
+    const loginResult = await sb.auth.signInWithPassword({ email, password });
+
+    if(loginResult.error){
+      console.error("LOGIN ERROR:", loginResult.error);
+      errorBox.textContent = "خطأ في تسجيل الدخول: " + loginResult.error.message;
+      return;
+    }
+
+    const user = loginResult.data.user;
+
+    errorBox.textContent = "جاري التحقق من صلاحيات الأدمن...";
+
+    const isAdmin = await checkIsAdmin();
+
+    if(!isAdmin){
+      await sb.auth.signOut();
+      errorBox.textContent = "هذا الحساب ليس حساب أدمن.";
+      return;
+    }
+
+    /* فتح لوحة الإدارة */
+    errorBox.textContent = "";
+    showAdmin(user ? user.email : "");
+
+    /* تحميل الطلبات */
+    await loadAds();
+
+  }catch(error){
+    console.error("LOGIN EXCEPTION:", error);
+    errorBox.textContent = error.message || "حدث خطأ غير متوقع أثناء تسجيل الدخول.";
+  }finally{
+    loginBtn.disabled = false;
+  }
+}
+
+
+/* =================================
+   8) استرجاع الجلسة عند فتح الصفحة
+================================= */
+async function restoreSession(){
+  try{
+    const sessionResult = await sb.auth.getSession();
+    const session = sessionResult && sessionResult.data && sessionResult.data.session;
+
+    if(!session) return;
+
+    const isAdmin = await checkIsAdmin();
+
+    if(!isAdmin){
+      await sb.auth.signOut();
+      return;
+    }
+
+    showAdmin(session.user ? session.user.email : "");
+    await loadAds();
+
+  }catch(error){
+    console.error("RESTORE SESSION ERROR:", error);
+    await sb.auth.signOut().catch(function(){});
+    showLogin();
+  }
+}
+
+
+/* =================================
+   9) تسجيل الخروج
+================================= */
+async function logout(){
+  try{
+    await sb.auth.signOut();
+  }catch(error){
+    console.error("LOGOUT ERROR:", error);
+  }
+
+  showLogin();
+  emailInput.value = "";
+  document.getElementById("count").textContent = "0";
+  document.getElementById("ads").innerHTML = "";
+}
+
+
+/* =================================
+   10) تحميل الطلبات
+================================= */
+async function loadAds(){
+  const box = document.getElementById("ads");
+
+  box.innerHTML = '<div class="loading">جاري تحميل الطلبات...</div>';
+
+  try{
+    const result = await sb
+      .from("ads")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if(result.error){
+      console.error("ADS ERROR:", result.error);
+      box.innerHTML = `
+        <div class="empty">
+          حدث خطأ في تحميل الطلبات.
+          <br><br>
+          ${escapeHtml(result.error.message)}
+        </div>
+      `;
+      return;
+    }
+
+    const ads = result.data || [];
+
+    document.getElementById("count").textContent = ads.length;
+
+    if(ads.length === 0){
+      box.innerHTML = '<div class="empty">لا توجد طلبات حتى الآن.</div>';
+      return;
+    }
+
+    box.innerHTML = "";
+    ads.forEach(function(ad){
+      box.appendChild(createCard(ad));
+    });
+
+  }catch(error){
+    console.error("LOAD ADS EXCEPTION:", error);
+    box.innerHTML = `
+      <div class="empty">
+        حدث خطأ غير متوقع في تحميل الطلبات.
+        <br><br>
+        ${escapeHtml(error.message)}
+      </div>
+    `;
+  }
+}
+
+
+/* =================================
+   11) بناء بطاقة الطلب
+================================= */
+function addRow(parent, label, value){
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const b = document.createElement("b");
+  b.textContent = label + ": ";
+
+  row.appendChild(b);
+  row.appendChild(
+    document.createTextNode(
+      (value === null || value === undefined || value === "")
+        ? "—"
+        : String(value)
+    )
+  );
+
+  parent.appendChild(row);
+}
+
+function createCard(ad){
+  const card = document.createElement("div");
+  card.className = "card";
+
+  /* الصورة */
+  if(ad.image_url){
+    const img = document.createElement("img");
+    img.src = ad.image_url;
+    img.alt = "صورة الطلب";
+    img.loading = "lazy";
+    img.onerror = function(){ this.style.display = "none"; };
+    card.appendChild(img);
+  }
+
+  /* البيانات */
+  const content = document.createElement("div");
+  content.className = "content";
+
+  addRow(content, "الوصف",     ad.description);
+  addRow(content, "الرابط",    ad.link);
+  addRow(content, "Gmail",     ad.email);
+  addRow(content, "المحافظة",  getGovernorateName(ad));
+  addRow(content, "المنطقة",   getAreaName(ad));
+  addRow(content, "وقت الإرسال", formatDate(ad.created_at));
+
+  card.appendChild(content);
+
+  /* الأزرار */
+  const actions = document.createElement("div");
+  actions.className = "actions";
+
+  /* مشاهدة */
+  const view = document.createElement("button");
+  view.className = "view";
+  view.textContent = "🖼️ مشاهدة الصورة";
+  view.onclick = function(){
+    if(ad.image_url){
+      window.open(ad.image_url, "_blank");
+    }else{
+      alert("لا توجد صورة.");
+    }
+  };
+  actions.appendChild(view);
+
+  /* تحميل */
+  const download = document.createElement("button");
+  download.className = "download";
+  download.textContent = "⬇️ تحميل الصورة";
+  download.onclick = function(){
+    downloadImage(ad.image_url, ad.id);
+  };
+  actions.appendChild(download);
+
+  /* نسخ */
+  const copy = document.createElement("button");
+  copy.className = "copy";
+  copy.textContent = "📋 نسخ البيانات";
+  copy.onclick = function(){
+    copyData(ad);
+  };
+  actions.appendChild(copy);
+
+  /* حذف */
+  const del = document.createElement("button");
+  del.className = "delete";
+  del.textContent = "🗑️ حذف الطلب";
+  del.onclick = function(){
+    deleteAd(ad);
+  };
+  actions.appendChild(del);
+
+  card.appendChild(actions);
+
+  return card;
+}
+
+
+/* =================================
+   12) نسخ البيانات
+================================= */
+async function copyData(ad){
+  const governorate = getGovernorateName(ad);
+  const area = getAreaName(ad);
+
+  const text = `elaalwa
+
+الوصف:
+${ad.description || ""}
+
+الرابط:
+${ad.link || ""}
+
+Gmail:
+${ad.email || ""}
+
+المحافظة:
+${governorate}
+
+المنطقة:
+${area}
+
+وقت الإرسال:
+${formatDate(ad.created_at)}`;
+
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    }else{
+      fallbackCopy(text);
+    }
+    alert("تم نسخ البيانات ✅");
+
+  }catch(error){
+    console.error("CLIPBOARD ERROR:", error);
+    try{
+      fallbackCopy(text);
+      alert("تم نسخ البيانات ✅");
+    }catch(e){
+      alert("تعذر نسخ البيانات.");
+    }
+  }
+}
+
+
+/* =================================
+   13) تحميل الصورة
+================================= */
+async function downloadImage(url, id){
+  if(!url){
+    alert("لا توجد صورة.");
+    return;
+  }
+
+  /* تحديد امتداد الملف */
+  let extension = "jpg";
+  try{
+    const clean = url.split("?")[0];
+    const parts = clean.split(".");
+    if(parts.length > 1){
+      const ext = parts.pop().toLowerCase();
+      if(ext.length <= 4 && /^[a-z0-9]+$/.test(ext)){
+        extension = ext;
+      }
+    }
+  }catch(e){}
+
+  try{
+    const response = await fetch(url);
+    if(!response.ok){
+      throw new Error("فشل تحميل الصورة");
+    }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = "elaalwa-" + id + "." + extension;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(blobUrl);
+
+  }catch(error){
+    console.error("DOWNLOAD ERROR:", error);
+    window.open(url, "_blank");
+  }
+}
+
+
+/* =================================
+   14) حذف الطلب
+================================= */
+async function deleteAd(ad){
+  const ok = confirm("هل تريد حذف هذا الطلب؟\n\nسيتم حذف الطلب والصورة.");
+  if(!ok) return;
+
+  /* حذف الصورة من التخزين */
+  if(ad.image_path){
+    try{
+      const storageResult = await sb.storage.from("ad-images").remove([ad.image_path]);
+      console.log("STORAGE DELETE:", storageResult);
+    }catch(error){
+      console.error("STORAGE DELETE ERROR:", error);
+    }
+  }
+
+  /* حذف الطلب من الجدول */
+  const result = await sb.from("ads").delete().eq("id", ad.id);
+
+  if(result.error){
+    console.error("DELETE ERROR:", result.error);
+    alert("فشل حذف الطلب:\n" + result.error.message);
+    return;
+  }
+
+  alert("تم حذف الطلب ✅");
+  await loadAds();
+}
+
+
+/* =================================
+   15) اختصارات لوحة المفاتيح
+================================= */
+emailInput.addEventListener("keydown", function(event){
+  if(event.key === "Enter"){
+    passwordInput.focus();
+  }
+});
+
+passwordInput.addEventListener("keydown", function(event){
+  if(event.key === "Enter"){
+    login();
+  }
+});
+
+
+/* =================================
+   16) بدء التشغيل
+================================= */
+restoreSession();
+</script>
+
+</body>
+</html>
