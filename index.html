@@ -88,13 +88,88 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 
 <style>
-:root{--black:#04722b;--orange:#ff6600;--yellow:#f1c548;--bg:#fafafa;--white:#fff;--text:#1a1a1a;--muted:#6b7280;--border:#e5e7eb;--red:#dc2626;--green:#04722b}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+/* =====================================================
+   نظام الألوان: أخضر 60% — برتقالي 25% — أصفر 15%
+===================================================== */
+:root{
+  --green:#04722b;
+  --green-600:#058a34;
+  --green-800:#035a22;
+  --green-soft:#e9f5ee;
+  --green-tint:#f3faf6;
 
-/* ==================== الهيدر بعد إضافة الصورتين ==================== */
-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:0;z-index:10}
-.header-inner{display:flex;align-items:center;justify-content:center;gap:16px;max-width:1000px;margin:0 auto}
+  --orange:#ff6600;
+  --orange-soft:#fff1e7;
+  --orange-800:#c24e00;
+
+  --yellow:#f1c548;
+  --yellow-soft:#fef8e6;
+  --yellow-800:#7a5c00;
+
+  --bg:#f6f8f6;
+  --white:#ffffff;
+  --text:#16201a;
+  --muted:#6b7280;
+  --border:#e6ebe7;
+  --red:#dc2626;
+
+  --radius-lg:20px;
+  --radius-md:14px;
+  --shadow-card:0 1px 2px rgba(16,24,40,.04), 0 18px 36px -26px rgba(4,114,43,.35);
+  --shadow-btn:0 12px 24px -12px rgba(4,114,43,.65);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+::selection{background:rgba(4,114,43,.16);color:#0d2a19}
+
+html{scroll-behavior:smooth}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,"Helvetica Neue",Arial,sans-serif;
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(900px 520px at 100% -5%, rgba(4,114,43,.07), transparent 62%),
+    radial-gradient(760px 460px at -5% 100%, rgba(255,102,0,.055), transparent 62%),
+    radial-gradient(600px 380px at 50% 45%, rgba(241,197,72,.05), transparent 70%);
+  background-attachment:fixed;
+  color:var(--text);
+  line-height:1.7;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+
+/* ==================== الهيدر ==================== */
+header{
+  background:rgba(255,255,255,.94);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--border);
+  box-shadow:0 6px 22px -18px rgba(4,114,43,.5);
+  padding:13px 16px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+/* شريط لوني علوي: أخضر ← أصفر ← برتقالي */
+header::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-1px;
+  height:3px;
+  background:linear-gradient(90deg,
+    var(--orange) 0%,
+    var(--yellow) 18%,
+    var(--green-600) 42%,
+    var(--green) 100%);
+  opacity:.95;
+}
+.header-inner{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  max-width:1000px;margin:0 auto;
+}
 .header-img{
   height:52px;
   width:auto;
@@ -104,64 +179,432 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;p
   user-select:none;
   -webkit-user-drag:none;
   pointer-events:none;
+  filter:drop-shadow(0 3px 6px rgba(4,114,43,.10));
 }
-.logo{font-size:30px;font-weight:900;line-height:1;white-space:nowrap}
-.logo .ela{color:#04722b}
-.logo .alwa{color:#ff6600}
-
-/* إزالة الفراغ المحيطي وتوسيع المحتوى ليتناسب مع جميع الأجهزة */
-.container{width:100%;max-width:100%;margin:auto;padding:16px;transition:max-width 0.3s ease}
-.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:16px}
-.counter{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:7px}
-.bar{height:8px;background:#f3f4f6;border-radius:99px;overflow:hidden;margin-bottom:18px}
-.bar div{height:100%;width:0%;background:#f1c548;transition:.3s}
-h1{font-size:21px;margin-bottom:4px}
-.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
-.field{margin-bottom:16px}
-label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
-.req{color:var(--red)}
-input,textarea,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:#111;font-size:15px;font-family:inherit}
-textarea{min-height:110px;resize:vertical}
-input:focus,textarea:focus,select:focus{outline:none;border-color:#04722b;box-shadow:0 0 0 3px rgba(4,114,43,.15)}
-.hint{color:var(--muted);font-size:12px;margin-top:5px}
-.tip{margin-top:8px;background:#fef9e7;border:1px solid #f1c548;color:#7a5c00;font-size:13px;border-radius:10px;padding:10px 12px;line-height:1.7}
-.location-note{margin-top:8px;font-size:13px;font-weight:700;color:#04722b;min-height:18px}
-.img-picker{border:2px dashed #d1d5db;border-radius:12px;padding:25px 15px;text-align:center;cursor:pointer;background:#fcfcfc}
-.img-picker:hover{border-color:#04722b;background:#f0f8f3}
-.img-picker .icon{font-size:35px;margin-bottom:8px}
-.img-picker .title{font-weight:700}
-.img-picker .small{color:var(--muted);font-size:12px;margin-top:3px}
-.preview{display:none;position:relative;margin-top:10px}
-.preview img{display:block;width:100%;max-height:400px;object-fit:contain;border:1px solid var(--border);border-radius:12px}
-.remove{position:absolute;top:8px;left:8px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;font-size:20px;cursor:pointer}
-.primary{width:100%;border:0;border-radius:12px;padding:14px;background:#04722b;color:#fff;font-size:16px;font-weight:800;cursor:pointer}
-.primary:disabled{opacity:.6;cursor:not-allowed}
-.alert{display:none;padding:12px 14px;border-radius:10px;margin-bottom:15px;font-size:14px;white-space:pre-line}
-.alert.show{display:block}
-.alert.error{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
-.alert.success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
-.alert.info{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
-
-/* تنسيق التذييل ليمتد بشكل جميل */
-.footer-note{width:100%;max-width:100%;margin:0 auto 14px;color:#374151;font-size:13px;line-height:1.8;background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:16px}
-footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
-
-/* تحسين المظهر للشاشات الكبيرة (لابتوب / تابلت) */
-@media (min-width: 768px) {
-  .container { max-width: 800px; }
-  .footer-note { max-width: 800px; border-radius: 14px; border: 1px solid var(--border); }
-  .card { padding: 24px; }
+.logo{
+  font-size:30px;
+  font-weight:900;
+  line-height:1;
+  white-space:nowrap;
+  letter-spacing:-.5px;
+  text-shadow:0 2px 10px rgba(4,114,43,.10);
 }
-@media (min-width: 1200px) {
-  .container { max-width: 1000px; }
-  .footer-note { max-width: 1000px; }
+.logo .ela{color:var(--green)}
+.logo .alwa{color:var(--orange)}
+
+/* ==================== الحاوية ==================== */
+.container{
+  width:100%;max-width:100%;margin:auto;
+  padding:18px 16px 34px;
+  transition:max-width .3s ease;
 }
 
-/* تحسين الهيدر على الجوال */
-@media (max-width: 480px) {
-  .header-inner { gap: 10px; }
-  .header-img { height: 38px; max-width: 110px; }
-  .logo { font-size: 24px; }
+/* ==================== البطاقات ==================== */
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  margin-top:18px;
+  box-shadow:var(--shadow-card);
+}
+
+/* بطاقة العدّاد */
+.counter-card{
+  padding:18px 20px;
+  background:linear-gradient(180deg,#ffffff, #fbfdfb);
+}
+.counter{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:var(--muted);
+  font-size:13.5px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+.counter span:last-child{
+  font-weight:800;
+  color:var(--green);
+  font-variant-numeric:tabular-nums;
+  background:var(--green-soft);
+  padding:3px 11px;
+  border-radius:99px;
+  font-size:12.5px;
+}
+.bar{
+  height:10px;
+  background:#edf1ee;
+  border-radius:99px;
+  overflow:hidden;
+  margin-bottom:2px;
+}
+.bar div{
+  height:100%;
+  width:0%;
+  border-radius:99px;
+  background:linear-gradient(270deg,var(--green) 0%, #2f9d5c 55%, var(--yellow) 100%);
+  transition:width .7s cubic-bezier(.4,0,.2,1);
+}
+
+/* ==================== العناوين ==================== */
+h1{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:-.3px;
+  margin-bottom:6px;
+  color:#0f2118;
+}
+.sub{
+  color:var(--muted);
+  font-size:14.5px;
+  margin-bottom:20px;
+  line-height:1.75;
+}
+
+/* ==================== الحقول ==================== */
+.field{margin-bottom:20px}
+
+label{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:700;
+  font-size:14.5px;
+  margin-bottom:9px;
+  color:#12251a;
+}
+.req{color:var(--orange);font-weight:900}
+
+input,textarea,select{
+  width:100%;
+  padding:13px 15px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-md);
+  background-color:#fcfdfc;
+  color:#111;
+  font-size:15px;
+  font-family:inherit;
+  transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+input::placeholder,textarea::placeholder{color:#9aa5a0}
+
+input:hover,textarea:hover,select:hover{
+  border-color:#cfe3d6;
+  background-color:#fff;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--green);
+  background-color:#fff;
+  box-shadow:0 0 0 4px rgba(4,114,43,.12);
+}
+
+textarea{min-height:118px;resize:vertical;line-height:1.75}
+
+select{
+  appearance:none;
+  -webkit-appearance:none;
+  cursor:pointer;
+  padding-left:44px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2304722b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:left 15px center;
+  background-size:16px;
+}
+select:disabled{
+  cursor:not-allowed;
+  opacity:.7;
+  background-color:#f4f6f5;
+}
+
+.hint{
+  color:var(--muted);
+  font-size:12.5px;
+  margin-top:7px;
+  line-height:1.7;
+}
+
+/* ==================== صندوق التنبيه الأصفر (15%) ==================== */
+.tip{
+  margin-top:10px;
+  background:var(--yellow-soft);
+  border:1px solid #f6e3a8;
+  border-inline-start:4px solid var(--yellow);
+  color:var(--yellow-800);
+  font-size:13px;
+  border-radius:12px;
+  padding:11px 14px;
+  line-height:1.8;
+  font-weight:600;
+}
+
+.location-note{
+  margin-top:10px;
+  font-size:13px;
+  font-weight:700;
+  color:var(--green);
+  background:var(--green-soft);
+  border-radius:10px;
+  padding:9px 13px;
+  line-height:1.7;
+}
+.location-note:empty{display:none}
+
+/* ==================== اختيار الصورة ==================== */
+.img-picker{
+  border:2px dashed #cfe0d5;
+  border-radius:18px;
+  padding:30px 18px;
+  text-align:center;
+  cursor:pointer;
+  background:linear-gradient(180deg,#fbfdfb,#f3faf6);
+  transition:border-color .25s ease, background .25s ease, transform .25s ease;
+}
+.img-picker:hover{
+  border-color:var(--green);
+  background:linear-gradient(180deg,#f4fbf7,#e8f6ee);
+  transform:translateY(-1px);
+}
+.img-picker .icon{
+  font-size:26px;
+  width:62px;height:62px;
+  margin:0 auto 12px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:var(--orange-soft);
+  border:1px solid #ffd9c0;
+  box-shadow:0 10px 20px -14px rgba(255,102,0,.8);
+}
+.img-picker .title{font-weight:800;font-size:15px;color:#12251a}
+.img-picker .small{color:var(--muted);font-size:12.5px;margin-top:5px}
+
+.preview{display:none;position:relative;margin-top:12px}
+.preview img{
+  display:block;
+  width:100%;
+  max-height:400px;
+  object-fit:contain;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#fafbfa;
+}
+.remove{
+  position:absolute;
+  top:10px;left:10px;
+  width:36px;height:36px;
+  border:0;
+  border-radius:50%;
+  background:rgba(20,20,20,.78);
+  color:#fff;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  transition:background .2s ease, transform .2s ease;
+}
+.remove:hover{background:var(--red);transform:scale(1.06)}
+
+/* ==================== زر الإرسال ==================== */
+.primary{
+  width:100%;
+  border:0;
+  border-radius:16px;
+  padding:16px;
+  background:linear-gradient(135deg, var(--green-600) 0%, var(--green) 48%, var(--green-800) 100%);
+  color:#fff;
+  font-size:16.5px;
+  font-weight:800;
+  font-family:inherit;
+  letter-spacing:.2px;
+  cursor:pointer;
+  box-shadow:var(--shadow-btn);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+.primary:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 18px 30px -14px rgba(4,114,43,.7);
+  filter:brightness(1.06);
+}
+.primary:active:not(:disabled){
+  transform:translateY(0) scale(.995);
+  box-shadow:0 8px 16px -10px rgba(4,114,43,.6);
+}
+.primary:disabled{opacity:.62;cursor:not-allowed;box-shadow:none}
+
+/* ==================== التنبيهات ==================== */
+.alert{
+  display:none;
+  padding:14px 16px;
+  border-radius:14px;
+  margin-bottom:18px;
+  font-size:14px;
+  font-weight:600;
+  line-height:1.75;
+  white-space:pre-line;
+  border:1px solid transparent;
+  border-inline-start-width:4px;
+}
+.alert.show{display:block;animation:alertIn .32s cubic-bezier(.4,0,.2,1)}
+@keyframes alertIn{
+  from{opacity:0;transform:translateY(-7px)}
+  to{opacity:1;transform:none}
+}
+.alert.error{
+  background:#fef3f2;color:#b42318;
+  border-color:#fecdc9;border-inline-start-color:#e5484d;
+}
+.alert.success{
+  background:#ecfdf3;color:#04622a;
+  border-color:#bbf1cd;border-inline-start-color:var(--green);
+}
+.alert.info{
+  background:#eff8ff;color:#175cd3;
+  border-color:#c6defb;border-inline-start-color:#2e90fa;
+}
+
+/* ==================== قسم الخطوات ==================== */
+.steps-card{margin-top:26px}
+
+.steps-title{
+  font-size:19px;
+  font-weight:800;
+  color:var(--green);
+  margin-bottom:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  letter-spacing:-.2px;
+}
+.steps-title::before{
+  content:"";
+  width:6px;
+  height:22px;
+  border-radius:99px;
+  background:linear-gradient(180deg,var(--green),var(--yellow));
+  flex-shrink:0;
+}
+.steps-sub{
+  font-size:13.5px;
+  color:var(--muted);
+  margin-bottom:18px;
+  font-weight:600;
+}
+.steps{display:flex;flex-direction:column;gap:6px}
+
+.step{
+  display:flex;
+  gap:13px;
+  align-items:flex-start;
+  padding:11px 12px;
+  border-radius:14px;
+  transition:background .2s ease;
+}
+.step:hover{background:var(--green-tint)}
+
+.step-num{
+  background:linear-gradient(135deg,var(--green-600),var(--green));
+  color:#fff;
+  width:28px;height:28px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;
+  font-size:13px;
+  flex-shrink:0;
+  box-shadow:0 8px 14px -8px rgba(4,114,43,.85);
+}
+/* الخطوة السادسة بلون برتقالي (25%) */
+.step:last-child .step-num{
+  background:linear-gradient(135deg,#ff8a3d,var(--orange));
+  box-shadow:0 8px 14px -8px rgba(255,102,0,.9);
+}
+.step-text{
+  font-size:14px;
+  color:#384a40;
+  line-height:1.8;
+}
+.step-text strong{color:#0f2118;font-weight:800}
+
+.hl-orange{color:var(--orange);font-weight:900}
+.hl-green{color:var(--green);font-weight:800}
+
+.steps-note{
+  margin-top:16px;
+  font-size:12.5px;
+  color:var(--yellow-800);
+  background:var(--yellow-soft);
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #f6e3a8;
+  border-inline-start:4px solid var(--yellow);
+  line-height:1.8;
+  font-weight:600;
+}
+
+/* ==================== التذييل ==================== */
+.footer-note{
+  width:100%;
+  max-width:100%;
+  margin:0 auto 14px;
+  color:#3b4a42;
+  font-size:13px;
+  line-height:1.9;
+  background:#fff;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:20px 18px;
+}
+.footer-note p:first-child{
+  font-weight:900;
+  font-size:17px;
+  color:var(--green);
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  letter-spacing:-.3px;
+}
+.footer-note p:first-child::before{
+  content:"";
+  width:6px;height:20px;
+  border-radius:99px;
+  background:linear-gradient(180deg,var(--green),var(--orange));
+}
+
+footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:12.5px;
+  padding:10px 16px 34px;
+}
+
+/* ==================== استجابة الشاشات ==================== */
+@media (min-width:768px){
+  .container{max-width:800px}
+  .footer-note{
+    max-width:800px;
+    border-radius:var(--radius-lg);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-card);
+  }
+  .card{padding:26px}
+}
+@media (min-width:1200px){
+  .container{max-width:1000px}
+  .footer-note{max-width:1000px}
+}
+
+@media (max-width:480px){
+  .header-inner{gap:10px}
+  .header-img{height:38px;max-width:110px}
+  .logo{font-size:24px}
+  .card{padding:18px;border-radius:18px}
+  h1{font-size:19.5px}
+  .img-picker{padding:26px 14px}
+}
+
+/* ==================== تقليل الحركة ==================== */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important;scroll-behavior:auto !important}
 }
 </style>
 </head>
@@ -181,7 +624,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
 
 <main class="container">
 
-  <div class="card">
+  <div class="card counter-card">
     <div class="counter">
       <span>إعلانات اليوم</span>
       <span id="counterText">— / 1251</span>
@@ -259,37 +702,39 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
   </div>
 
   <!-- قسم يشرح كيفية عمل المنصة (بالترتيب الفعلي) -->
-  <div class="card" style="margin-top: 24px;">
-    <h2 style="font-size: 19px; margin-bottom: 12px; color: #04722b;">كيف تعمل منصة elaalwa؟</h2>
-    <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">أرسل إعلانك في 6 خطوات بسيطة:</p>
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
-        <div><strong>ارفع صورة إعلانك:</strong> اختر صورة جذابة وواضحة (JPG / PNG / WebP).</div>
+  <div class="card steps-card">
+    <h2 class="steps-title">كيف تعمل منصة elaalwa؟</h2>
+    <p class="steps-sub">أرسل إعلانك في 6 خطوات بسيطة:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>ارفع صورة إعلانك:</strong> اختر صورة جذابة وواضحة (JPG / PNG / WebP).</div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
-        <div><strong>اكتب وصفاً قصيراً:</strong> سيظهر وصفك تحت صورة الإعلان مباشرة.</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>اكتب وصفاً قصيراً:</strong> سيظهر وصفك تحت صورة الإعلان مباشرة.</div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
-        <div><strong>أضف رابط صفحتك:</strong> الرابط الذي سينتقل إليه المستخدم عند الضغط على إعلانك.</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>أضف رابط صفحتك:</strong> الرابط الذي سينتقل إليه المستخدم عند الضغط على إعلانك.</div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">4</div>
-        <div><strong>أدخل Gmail للتواصل:</strong> لكي نتمكن من التواصل معك بخصوص الإعلان.</div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text"><strong>أدخل Gmail للتواصل:</strong> لكي نتمكن من التواصل معك بخصوص الإعلان.</div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">5</div>
-        <div><strong>حدد المحافظة:</strong> اختر المحافظة المستهدفة من قائمة 19 محافظة عراقية.</div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-text"><strong>حدد المحافظة:</strong> اختر المحافظة المستهدفة من قائمة 19 محافظة عراقية.</div>
       </div>
-      <div style="display: flex; gap: 10px; align-items: flex-start;">
-        <div style="background: #04722b; color: #fff; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">6</div>
-        <div><strong>حدد المنطقة:</strong> اختر المنطقة بدقة. يظهر إعلانك حصرياً هناك لمدة <strong>24 ساعة كاملة</strong>.</div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-text"><strong>حدد المنطقة:</strong> اختر المنطقة بدقة. يظهر إعلانك حصرياً هناك لمدة <span class="hl-orange">24 ساعة كاملة</span>.</div>
       </div>
     </div>
-    <p style="margin-top: 14px; font-size: 12px; color: #7a5c00; background: #fef9e7; padding: 8px 10px; border-radius: 8px; border: 1px solid #f1c548;">
-      * ملاحظة: يتم تطبيق نظام "إعلان واحد لكل منطقة" لضمان أعلى نسبة مشاهدة وتركيز لجمهورك المستهدف.
+
+    <p class="steps-note">
+      * ملاحظة: يتم تطبيق نظام <strong>"إعلان واحد لكل منطقة"</strong> لضمان أعلى نسبة مشاهدة وتركيز لجمهورك المستهدف.
     </p>
   </div>
 
@@ -297,14 +742,14 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
 
 <footer>
   <div class="footer-note">
-    <p style="font-weight: 900; font-size: 16px; color: #04722b; margin-bottom: 8px;">elaalwa</p>
+    <p>elaalwa</p>
     <p>منصة إعلانية لإدارة وعرض المحتوى المحلي وفق الموقع الجغرافي للمستخدم. يتم تحديد المحافظة والمنطقة المستهدفة، وربط كل إعلان بالمنطقة الجغرافية المحددة ليظهر للمستخدمين المتواجدين فيها.</p>
     <br>
-    <p>يعتمد النظام تخصيص إعلان واحد لكل منطقة لمدة 24 ساعة، ولا يتم خلال هذه المدة عرض إعلان آخر للمنطقة نفسها. وعند انتهاء مدة الـ24 ساعة، ينتهي عرض الإعلان وتصبح المنطقة متاحة لإضافة إعلان جديد.</p>
+    <p>يعتمد النظام تخصيص إعلان واحد لكل منطقة لمدة <span class="hl-green">24 ساعة</span>، ولا يتم خلال هذه المدة عرض إعلان آخر للمنطقة نفسها. وعند انتهاء مدة الـ24 ساعة، ينتهي عرض الإعلان وتصبح المنطقة متاحة لإضافة إعلان جديد.</p>
     <br>
     <p>وبهذه الآلية، يتم تنظيم الإعلانات وفق المحافظة والمنطقة والفترة الزمنية المحددة، مع اعتماد الموقع الجغرافي للمستخدم كعامل أساسي في تحديد الإعلان الذي يظهر له داخل التطبيق.</p>
   </div>
-  <div style="margin-top: 15px;">© elaalwa — جميع الحقوق محفوظة <span id="year"></span></div>
+  <div>© elaalwa — جميع الحقوق محفوظة <span id="year"></span></div>
 </footer>
 
 <script>
