@@ -8,11 +8,15 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: elaalwa-pages
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
 
+    steps:
       - name: تحميل الملفات
         uses: actions/checkout@v4
         with:
@@ -30,6 +34,7 @@ jobs:
 
       - name: نسخ ملفات الموقع الرئيسية إلى docs
         run: |
+          mkdir -p docs
           cp index.html docs/ 2>/dev/null || true
           cp admin.html docs/ 2>/dev/null || true
           cp privacy-policy.html docs/ 2>/dev/null || true
@@ -46,7 +51,12 @@ jobs:
       - name: حفظ الصفحات المُولّدة
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/
-          git commit -m "تحديث تلقائي لصفحات elaalwa [skip actions]" || echo "لا تغييرات"
-          git push
+          if git diff --cached --quiet; then
+            echo "لا توجد تغييرات جديدة"
+            exit 0
+          fi
+          git commit -m "تحديث تلقائي لصفحات Elaalwa [skip actions]"
+          git pull --rebase origin main
+          git push origin HEAD:main
