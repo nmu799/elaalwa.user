@@ -1,0 +1,52 @@
+name: Generate Elaalwa Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: تحميل الملفات
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: تجهيز Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: توليد الصفحات
+        run: |
+          node generate.js
+          node sitemap.js
+
+      - name: نسخ ملفات الموقع الرئيسية إلى docs
+        run: |
+          cp index.html docs/ 2>/dev/null || true
+          cp admin.html docs/ 2>/dev/null || true
+          cp privacy-policy.html docs/ 2>/dev/null || true
+          cp terms.html docs/ 2>/dev/null || true
+          cp robots.txt docs/ 2>/dev/null || true
+          cp *.png docs/ 2>/dev/null || true
+          cp *.jpg docs/ 2>/dev/null || true
+          cp *.jpeg docs/ 2>/dev/null || true
+          cp *.webp docs/ 2>/dev/null || true
+          cp *.svg docs/ 2>/dev/null || true
+          cp *.pdf docs/ 2>/dev/null || true
+          cp *.ico docs/ 2>/dev/null || true
+
+      - name: حفظ الصفحات المُولّدة
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git commit -m "تحديث تلقائي لصفحات elaalwa [skip actions]" || echo "لا تغييرات"
+          git push
