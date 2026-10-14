@@ -139,6 +139,7 @@ function pickCats(seed,n=9){return pickN(seed,n,CATEGORIES.length).map(i=>CATEGO
 function pickOne(seed,arr){return arr[hash(seed)%arr.length];}
 function nearbyAreas(gov,currentSlug,n=5){const others=gov.a.filter(a=>a.s!==currentSlug);if(!others.length)return[];return pickN(currentSlug+gov.g,n,others.length).map(i=>others[i]);}
 
+/* ============ CSS محدّث — الصور الطويلة 1080×2401 ============ */
 const CSS = `<style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Cairo',system-ui,sans-serif;background:#fff;color:#1c1f26;line-height:1.75}
@@ -155,10 +156,11 @@ li{padding:4px 0}
 a{color:#04722b}
 .cta{display:inline-block;background:#ff6600;color:#fff;padding:14px 28px;border-radius:6px;font-weight:700;text-decoration:none;margin:20px 0}
 .cta:hover{background:#cc5200}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin:20px 0}
-.card{background:#f6fbf7;border:1px solid #e2efe5;border-radius:10px;overflow:hidden;text-align:center;padding-bottom:12px}
-.card img{width:100%;aspect-ratio:1/1;height:auto;object-fit:contain;display:block;background:#eaf3ec;padding:6px}
-.card .name{font-weight:700;color:#04722b;margin:10px 4px 4px;font-size:.98rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin:20px 0}
+.card{background:#f6fbf7;border:1px solid #e2efe5;border-radius:12px;overflow:hidden;text-align:center;padding-bottom:12px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(4,114,43,.15)}
+.card img{width:100%;height:auto;aspect-ratio:1080/2401;object-fit:cover;display:block;background:#eaf3ec}
+.card .name{font-weight:700;color:#04722b;margin:10px 6px 4px;font-size:1rem}
 .card .note{font-size:.72rem;color:#888;padding:0 6px}
 .steps{background:#f6fbf7;border:1px solid #e2efe5;border-radius:10px;padding:20px;margin:20px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
 .step{text-align:center}
@@ -171,20 +173,28 @@ footer{background:#023d17;color:#fff;text-align:center;padding:24px;margin-top:4
 footer a{color:#f1c548}
 .contact{background:#f6fbf7;border:1px solid #e2efe5;border-radius:10px;padding:16px 20px;margin:20px 0}
 .contact a{display:inline-block;margin:4px 10px 4px 0;font-weight:600}
+@media(max-width:480px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  h1{font-size:23px}
+  h2{font-size:18px}
+  .card .name{font-size:.9rem}
+}
 </style>`;
 
-function card(p,name,isFirst){
+function card(p,name,gov,isFirst){
   const load = isFirst ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  const alt = `${p.ar} في ${name} ${gov} - إعلان حصري 24 ساعة على إيلا علوة`;
   return `<div class="card">
-  <img src="/${p.f}" alt="${p.ar} في ${name}" ${load} width="300" height="300" decoding="async">
+  <img src="/${p.f}" alt="${alt}" title="${p.ar} في ${name}" ${load} width="1080" height="2401" decoding="async">
   <div class="name">${p.ar}</div>
   <div class="note">إعلان حصري 24 ساعة</div>
 </div>`;
 }
-function cardKu(p,name,isFirst){
+function cardKu(p,name,gov,isFirst){
   const load = isFirst ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  const alt = `${p.ku} لە ${name} ${gov} - ڕیکلامی تایبەت 24 کاتژمێر لە ئێلا عەلوە`;
   return `<div class="card">
-  <img src="/${p.f}" alt="${p.ku} لە ${name}" ${load} width="300" height="300" decoding="async">
+  <img src="/${p.f}" alt="${alt}" title="${p.ku} لە ${name}" ${load} width="1080" height="2401" decoding="async">
   <div class="name">${p.ku}</div>
   <div class="note">ڕیکلامی تایبەت 24 کاتژمێر</div>
 </div>`;
@@ -198,9 +208,26 @@ function makePage(gov,area){
   const heroCat=cats[0];
   const intro=pickOne(seed+'-intro',AR_INTROS)(area.n,gov.ga);
   const extraService=pickOne(seed+'-svc',EXTRA_AR);
-  const gridHtml=cats.map((c,i)=>card(c,area.n,i===0)).join('\n');
+  const gridHtml=cats.map((c,i)=>card(c,area.n,gov.ga,i===0)).join('\n');
   const nearby=nearbyAreas(gov,area.s,5);
   const nearbyHtml=nearby.map(a=>`<li><a href="/iraq/${gov.g}/${a.s}/">إعلانات ${a.n}</a></li>`).join('');
+
+  /* Schema معرض الصور */
+  const imageGallerySchema = JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"ImageGallery",
+    "name":`صور إعلانات ${area.n} - ${gov.ga}`,
+    "description":`مجموعة صور الفئات الإعلانية المتاحة في ${area.n}`,
+    "image": cats.map(c => ({
+      "@type":"ImageObject",
+      "url":`${SITE}/${c.f}`,
+      "name":`${c.ar} في ${area.n}`,
+      "description":`إعلان ${c.ar} حصري 24 ساعة في ${area.n}`,
+      "width":1080,
+      "height":2401,
+      "caption":`${c.ar} - ${area.n} - إيلا علوة`
+    }))
+  });
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -219,9 +246,14 @@ ${kuLink}
 <meta property="og:title" content="إعلانات ${area.n} — إيلا علوة">
 <meta property="og:description" content="أعلن حصرياً في ${area.n} لمدة 24 ساعة.">
 <meta property="og:image" content="${SITE}/${heroCat.f}">
+<meta property="og:image:width" content="1080">
+<meta property="og:image:height" content="2401">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","name":"إعلانات ${area.n} — إيلا علوة","description":"منصة إعلانية لعرض الإعلانات في ${area.n}، ${gov.ga}. إعلان حصري واحد لكل منطقة لمدة 24 ساعة.","url":"${SITE}/iraq/${gov.g}/${area.s}/","inLanguage":"ar","isPartOf":{"@type":"WebSite","name":"إيلا علوة","url":"${SITE}/"},"publisher":{"@type":"Organization","name":"إيلا علوة","url":"${SITE}/"},"primaryImageOfPage":{"@type":"ImageObject","url":"${SITE}/${heroCat.f}"},"about":{"@type":"Place","name":"${area.n}، ${gov.ga}، العراق"}}
+{"@context":"https://schema.org","@type":"WebPage","name":"إعلانات ${area.n} — إيلا علوة","description":"منصة إعلانية لعرض الإعلانات في ${area.n}، ${gov.ga}. إعلان حصري واحد لكل منطقة لمدة 24 ساعة.","url":"${SITE}/iraq/${gov.g}/${area.s}/","inLanguage":"ar","isPartOf":{"@type":"WebSite","name":"إيلا علوة","url":"${SITE}/"},"publisher":{"@type":"Organization","name":"إيلا علوة","url":"${SITE}/"},"primaryImageOfPage":{"@type":"ImageObject","url":"${SITE}/${heroCat.f}","width":1080,"height":2401},"about":{"@type":"Place","name":"${area.n}، ${gov.ga}، العراق"}}
+</script>
+<script type="application/ld+json">
+${imageGallerySchema}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"${SITE}/"},{"@type":"ListItem","position":2,"name":"${gov.ga}","item":"${SITE}/iraq/${gov.g}/"},{"@type":"ListItem","position":3,"name":"${area.n}","item":"${SITE}/iraq/${gov.g}/${area.s}/"}]}
@@ -260,7 +292,7 @@ ${gridHtml}
 <div class="contact">
 <p>فريق إيلا علوة جاهز لمساعدتك:</p>
 <a href="https://wa.me/9647813130254" target="_blank" rel="noopener">💬 واتساب</a>
-<a href="mailto:info@elaalwa.com">✉️ info@elaalwa.com</a>
+<a href="mailto:alwairaqe@gmail.com">✉️ alwairaqe@gmail.com</a>
 </div>
 
 <h2>مناطق قريبة من ${area.n}</h2>
@@ -286,9 +318,24 @@ function makeKuPage(gov,area,govNameKu){
   const heroCat=cats[0];
   const intro=pickOne(seed+'-intro',KU_INTROS)(area.n,govNameKu);
   const extraService=pickOne(seed+'-svc',EXTRA_KU);
-  const gridHtml=cats.map((c,i)=>cardKu(c,area.n,i===0)).join('\n');
+  const gridHtml=cats.map((c,i)=>cardKu(c,area.n,govNameKu,i===0)).join('\n');
   const nearby=nearbyAreas(gov,area.s,5);
   const nearbyHtml=nearby.map(a=>`<li><a href="/ckb/iraq/${gov.g}/${a.s}/">ڕیکلام لە ${a.n}</a></li>`).join('');
+
+  const imageGallerySchema = JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"ImageGallery",
+    "name":`وێنەکانی ڕیکلام لە ${area.n} - ${govNameKu}`,
+    "image": cats.map(c => ({
+      "@type":"ImageObject",
+      "url":`${SITE}/${c.f}`,
+      "name":`${c.ku} لە ${area.n}`,
+      "description":`ڕیکلامی ${c.ku} لە ${area.n}`,
+      "width":1080,
+      "height":2401,
+      "caption":`${c.ku} - ${area.n} - ئێلا عەلوە`
+    }))
+  });
 
   return `<!DOCTYPE html>
 <html lang="ckb" dir="rtl">
@@ -304,9 +351,14 @@ function makeKuPage(gov,area,govNameKu){
 <link rel="icon" type="image/png" href="/elaalwa-favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:image" content="${SITE}/${heroCat.f}">
+<meta property="og:image:width" content="1080">
+<meta property="og:image:height" content="2401">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","name":"ڕیکلامەکان لە ${area.n} — ئێلا عەلوە","description":"پلاتفۆرمی ڕیکلامی لە ${area.n}، ${govNameKu}.","url":"${SITE}/ckb/iraq/${gov.g}/${area.s}/","inLanguage":"ckb","isPartOf":{"@type":"WebSite","name":"ئێلا عەلوە","url":"${SITE}/"},"primaryImageOfPage":{"@type":"ImageObject","url":"${SITE}/${heroCat.f}"},"about":{"@type":"Place","name":"${area.n}، ${govNameKu}، عێراق"}}
+{"@context":"https://schema.org","@type":"WebPage","name":"ڕیکلامەکان لە ${area.n} — ئێلا عەلوە","description":"پلاتفۆرمی ڕیکلامی لە ${area.n}، ${govNameKu}.","url":"${SITE}/ckb/iraq/${gov.g}/${area.s}/","inLanguage":"ckb","isPartOf":{"@type":"WebSite","name":"ئێلا عەلوە","url":"${SITE}/"},"primaryImageOfPage":{"@type":"ImageObject","url":"${SITE}/${heroCat.f}","width":1080,"height":2401},"about":{"@type":"Place","name":"${area.n}، ${govNameKu}، عێراق"}}
+</script>
+<script type="application/ld+json">
+${imageGallerySchema}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"سەرەکی","item":"${SITE}/"},{"@type":"ListItem","position":2,"name":"${govNameKu}","item":"${SITE}/ckb/iraq/${gov.g}/"},{"@type":"ListItem","position":3,"name":"${area.n}","item":"${SITE}/ckb/iraq/${gov.g}/${area.s}/"}]}
@@ -345,7 +397,7 @@ ${gridHtml}
 <div class="contact">
 <p>تیمی ئێلا عەلوە ئامادەیە یارمەتیت بدات:</p>
 <a href="https://wa.me/9647813130254" target="_blank" rel="noopener">💬 واتساپ</a>
-<a href="mailto:info@elaalwa.com">✉️ info@elaalwa.com</a>
+<a href="mailto:alwairaqe@gmail.com">✉️ alwairaqe@gmail.com</a>
 </div>
 
 <h2>ناوچەکانی نزیک لە ${area.n}</h2>
