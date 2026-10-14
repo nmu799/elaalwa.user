@@ -1,3 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+
+User-agent: Googlebot-Image
+Allow: /
+
 Sitemap: https://elaalwa.com/sitemap.xml
+Sitemap: https://elaalwa.com/sitemap-images.xml
